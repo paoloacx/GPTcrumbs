@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Breadcrumbs Timeline — v2 (final)</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+/* Reset & variables */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --accent:#000;
+  --panel:#fff;
+  --muted:#666;
+  --ui-border:#999;
+}
+body{font-family:'Courier New',monospace;background:repeating-linear-gradient(0deg,#c0c0c0,#c0c0c0 1px,#d0d0d0 1px,#d0d0d0 2px);color:#111;padding:20px 20px 160px}
+body.dark{background:repeating-linear-gradient(0deg,#222,#222 1px,#2b2b2b 1px,#2b2b2b 2px);color:#e6e6e6;--panel:#333;--muted:#bbb;--ui-border:#666}
+.container{max-width:1000px;margin:0 auto}
+
+/* Mac window */
+.mac-window{background:var(--panel);border:3px solid var(--accent);box-shadow:5px 5px 0 rgba(0,0,0,0.25);margin-bottom:16px}
+.mac-title{background:var(--accent);color:#fff;padding:8px 12px;font-weight:700;text-align:center}
+.mac-content{padding:14px}
+.mac-button{background:#ddd;border:3px outset #fff;padding:8px 12px;font-weight:700;cursor:pointer;margin:6px 6px 6px 0;font-family:'Courier New',monospace}
+.mac-button-primary{background:var(--accent);color:#fff}
+.mac-input,.mac-textarea{width:100%;padding:8px;border:2px inset var(--ui-border);margin:8px 0;font-family:'Courier New',monospace}
+.mac-textarea{min-height:100px;resize:vertical}
+.mac-label{display:block;font-weight:700;margin-top:6px}
+
+/* timeline */
+.timeline{position:relative;padding-left:48px}
+.timeline-line{position:absolute;left:30px;top:0;bottom:0;width:4px;background:var(--accent)}
+.day-block{margin-bottom:20px}
+.day-header{background:var(--accent);color:#fff;padding:10px 14px;border:3px solid var(--accent);display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.day-content{padding:12px 0;transition:max-height .28s ease;overflow:hidden}
+.day-content.collapsed{max-height:0;padding-top:0}
+
+/* entry */
+.entry{border:3px ridge var(--ui-border);padding:12px;margin-bottom:12px;background:var(--panel);position:relative;min-height:110px}
+.entry:hover{transform:translateY(-2px)}
+.entry-time{font-weight:700;color:var(--muted);margin-bottom:8px}
+.entry-meta{font-size:13px;color:var(--muted);margin-bottom:8px;display:flex;gap:10px;align-items:center}
+.entry-note{font-size:14px;line-height:1.5;max-height:160px;overflow:hidden;transition:max-height .2s}
+.entry-note.expanded{max-height:1000px}
+.preview-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.preview-item{width:100px;height:100px;border:2px solid var(--accent);overflow:hidden;cursor:pointer;position:relative}
+.preview-item img{width:100%;height:100%;object-fit:cover}
+.preview-map{width:120px;height:120px;border:2px solid var(--accent);position:absolute;right:16px;top:16px;cursor:pointer}
+
+/* forms & small */
+.hidden{display:none !important}
+.footer{position:fixed;bottom:0;left:0;right:0;background:var(--accent);color:#fff;padding:12px 16px;border-top:3px solid #666;display:flex;flex-direction:column;gap:8px;box-shadow:0 -3px 10px rgba(0,0,0,.3)}
+.footer-controls{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.search-input{padding:6px;border:2px inset var(--ui-border);font-family:'Courier New',monospace}
+.filter-select{padding:6px;border:2px inset var(--ui-border)}
+
+/* modals */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:2000}
+.modal .panel{background:var(--panel);border:3px solid var(--accent);padding:12px;width:340px}
+.modal .panel .row{margin:8px 0}
+.modal.hidden{display:none}
+
+/* small screens */
+@media(max-width:640px){
+  .preview-map{display:none}
+  .container{padding:8px}
+}
+</style>
+</head>
+<body>
+  <!-- theme toggle -->
+  <button id="theme-btn" class="mac-button" style="position:fixed;top:16px;right:16px;z-index:3000">🌙</button>
+
+  <div class="container">
+    <!-- header -->
+    <div class="mac-window">
+      <div class="mac-title">Breadcrumbs Timeline</div>
+      <div class="mac-content">
+        <button class="mac-button mac-button-primary" onclick="openBreadcrumbForm()">🍞 New Breadcrumb</button>
+        <button class="mac-button" onclick="openTimeForm()">⏰ New Time Log</button>
+        <button class="mac-button" onclick="openTrackMenu()">📓 Track</button>
+        <button class="mac-button" onclick="openSpentForm()">💰 Spent</button>
+      </div>
+    </div>
+
+    <!-- dynamic forms root -->
+    <div id="forms-root"></div>
+
+    <!-- timeline -->
+    <div id="timeline" ></div>
+
+    <div id="empty-state" class="mac-window hidden">
+      <div class="mac-content" style="text-align:center;padding:36px">
+        <div style="font-size:48px;margin-bottom:12px">📝</div>
+        <strong>No entries yet</strong>
+        <p style="color:var(--muted);margin-top:8px">Create your first breadcrumb</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- footer -->
+  <div id="footer" class="footer hidden">
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <input id="search" class="search-input" placeholder="🔎 Search...">
+      <select id="date-filter" class="filter-select">
+        <option value="all">All</option><option value="today">Today</option><option value="week">This week</option><option value="month">This month</option>
+      </select>
+      <select id="location-filter" class="filter-select"><option value="all">All locations</option></select>
+      <button class="mac-button" onclick="clearFilters()">Clear filters</button>
+    </div>
+    <div class="footer-controls">
+      <button class="mac-button" onclick="exportCSV()">CSV</button>
+      <button class="mac-button" onclick="exportICS()">iCal</button>
+      <button class="mac-button" onclick="exportJSON()">JSON</button>
+    </div>
+  </div>
+
+  <!-- image modal -->
+  <div id="image-modal" class="modal hidden"><div class="panel"><button class="mac-button" onclick="closeModal('image-modal')" style="float:right">✕</button><img id="image-modal-img" style="max-width:100%;display:block;margin-top:6px"></div></div>
+
+  <!-- map modal -->
+  <div id="map-modal" class="modal hidden"><div class="panel" style="width:80%;height:80%"><button class="mac-button" onclick="closeModal('map-modal')" style="float:right">✕</button><div id="map-modal-container" style="width:100%;height:90%"></div></div></div>
+
+  <!-- city prompt modal -->
+  <div id="city-modal" class="modal hidden">
+    <div class="panel">
+      <div style="font-weight:700;margin-bottom:8px">City required</div>
+      <div class="row"><input id="city-input" class="mac-input" placeholder="City (e.g. Madrid)"></div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:8px">
+        <button class="mac-button mac-button-primary" onclick="confirmCity()">OK</button>
+        <button class="mac-button" onclick="cancelCity()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- notification -->
+  <div id="notif" class="modal hidden"><div class="panel" style="width:auto"><div id="notif-text"></div></div></div>
+
+<script>
+/* ========== CONFIG ========== */
+const OPENWEATHER_KEY = '317f7bcb07cf05e2c6265176c502a4bb'; // your key
+const STORAGE_KEY = 'breadcrumbs_v2_entries';
+/* ============================ */
+
+let entries = [];
+let currentImages = [];
+let currentCoords = null;
+let currentAudio = null;
+let mediaRecorder = null;
+let audioChunks = [];
+let cityPromptResolve = null;
+let tagsList = [];
+let editingId = null;
+
+/* ---------- Helpers ---------- */
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7) }
+function showNotif(msg, ms=1600){ const n=document.getElementById('notif'), t=document.getElementById('notif-text'); t.textContent=msg; n.classList.remove('hidden'); setTimeout(()=>n.classList.add('hidden'), ms); }
+function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); updateLocationFilter(); }
+function load(){ const s=localStorage.getItem(STORAGE_KEY); entries = s? JSON.parse(s):[]; renderAll(); updateLocationFilter(); }
+
+/* ---------- Theme ---------- */
+document.getElementById('theme-btn').addEventListener('click', ()=>{ document.body.classList.toggle('dark'); document.getElementById('theme-btn').textContent = document.body.classList.contains('dark') ? '☀️' : '🌙'; });
+
+/* ---------- Forms ---------- */
+function ensureForms(){
+  if(document.getElementById('forms-root').innerHTML.trim()!=='') return;
+  const root=document.getElementById('forms-root');
+  root.innerHTML = `
+    <div id="breadcrumb-form" class="mac-window hidden">
+      <div class="mac-title">New Breadcrumb</div>
+      <div class="mac-content">
+        <label class="mac-label">Note</label>
+        <textarea id="note" class="mac-textarea" placeholder="What's happening?"></textarea>
+
+        <label class="mac-label">Location (city or place)</label>
+        <input id="location" class="mac-input" placeholder="City or place">
+        <button id="gps-btn" class="mac-button" onclick="useGPS()">🌍 Use GPS</button>
+        <div id="form-map" class="hidden" style="margin-top:8px;height:160px"></div>
+
+        <label class="mac-label">Weather</label>
+        <input id="weather" class="mac-input" readonly placeholder="Weather will be fetched">
+
+        <label class="mac-label">Tags</label>
+        <div style="display:flex;gap:8px"><input id="tag" class="mac-input" placeholder="Add tag"><button class="mac-button" onclick="addTag()">➕</button></div>
+        <div id="tags" style="margin:8px 0"></div>
+
+        <label class="mac-label">Images</label>
+        <input id="images" type="file" accept="image/*" multiple onchange="handleImages(event)">
+        <div id="image-previews" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"></div>
+
+        <div style="margin-top:10px">
+          <label class="mac-label">Audio (optional)</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button id="rec-start" class="mac-button" onclick="startRec()">● Record</button>
+            <button id="rec-stop" class="mac-button" onclick="stopRec()" disabled>■ Stop</button>
+            <span id="rec-status">Ready</span>
+          </div>
+          <div id="audio-preview" style="margin-top:8px"></div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:12px">
+          <button class="mac-button mac-button-primary" id="save-breadcrumb" onclick="submitBreadcrumb()">💾 Save</button>
+          <button class="mac-button" onclick="closeBreadcrumbForm()">Cancel</button>
+          <button class="mac-button hidden" id="delete-entry-btn" onclick="deleteEditingEntry()">🗑️ Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="time-form" class="mac-window hidden">
+      <div class="mac-title">New Time Log</div>
+      <div class="mac-content">
+        <label class="mac-label">Category</label>
+        <select id="time-category" class="mac-input">
+          <option>Workout</option><option>Work</option><option>Commute</option><option>Study</option><option>Rest</option><option>Other</option>
+        </select>
+
+        <label class="mac-label">Start time</label>
+        <input id="time-start" type="datetime-local" class="mac-input">
+
+        <label class="mac-label">Duration</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="time-duration" type="number" min="1" value="30" class="mac-input" style="width:120px">
+          <select id="time-unit" class="mac-input" style="width:120px">
+            <option value="minutes">Minutes</option><option value="hours">Hours</option>
+          </select>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="mac-button mac-button-primary" onclick="submitTimeLog()">💾 Create</button>
+          <button class="mac-button" onclick="closeTimeForm()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="track-menu" class="mac-window hidden">
+      <div class="mac-title">Track — Select Category</div>
+      <div class="mac-content">
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <button class="mac-button" onclick="createTrack('Food')">🍽 Food</button>
+          <button class="mac-button" onclick="createTrack('Sleep')">🛌 Sleep</button>
+          <button class="mac-button" onclick="createTrack('Mood')">😊 Mood</button>
+          <button class="mac-button" onclick="createTrack('Training')">💪 Training</button>
+          <button class="mac-button" onclick="createTrack('Health')">🩺 Health</button>
+          <button class="mac-button" onclick="createTrack('Other')">🔖 Other</button>
+        </div>
+        <div style="margin-top:12px">
+          <small style="color:var(--muted)">Click a category to create a quick track entry. Edit later to add details.</small>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="mac-button" onclick="closeTrackMenu()">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="spent-form" class="mac-window hidden">
+      <div class="mac-title">New Expense</div>
+      <div class="mac-content">
+        <label class="mac-label">Description</label>
+        <input id="spent-desc" class="mac-input">
+        <label class="mac-label">Amount</label>
+        <input id="spent-amt" type="number" class="mac-input" step="0.01">
+        <label class="mac-label">Category</label>
+        <input id="spent-cat" class="mac-input" placeholder="Food, Transport...">
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="mac-button mac-button-primary" onclick="submitSpent()">💾 Save</button>
+          <button class="mac-button" onclick="closeSpentForm()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- Tag helpers ---------- */
+function addTag(){ const t=document.getElementById('tag').value.trim(); if(!t) return; if(!tagsList.includes(t)) tagsList.push(t); renderTags(); document.getElementById('tag').value=''; }
+function renderTags(){ const cont=document.getElementById('tags'); cont.innerHTML=''; tagsList.forEach((t,i)=>{ const span=document.createElement('span'); span.style.display='inline-block'; span.style.padding='6px 8px'; span.style.border='2px inset var(--ui-border)'; span.style.marginRight='6px'; span.innerHTML = `${t} <strong style="cursor:pointer;margin-left:6px" onclick="removeTag(${i})">×</strong>`; cont.appendChild(span); }); }
+function removeTag(i){ tagsList.splice(i,1); renderTags(); }
+
+/* ---------- Images ---------- */
+function handleImages(e){
+  const files = Array.from(e.target.files || []);
+  files.forEach(file=>{
+    const fr=new FileReader();
+    fr.onload = ev => { currentImages.push(ev.target.result); renderImagePreview(); };
+    fr.readAsDataURL(file);
+  });
+}
+function renderImagePreview(){ const cont=document.getElementById('image-previews'); cont.innerHTML=''; currentImages.forEach((src,i)=>{ const d=document.createElement('div'); d.className='preview-item'; d.innerHTML = `<img src="${src}"><div style="position:absolute;top:6px;right:6px;background:#000;color:#fff;padding:2px 6px;border-radius:6px;cursor:pointer" onclick="removeImage(${i})">✕</div>`; cont.appendChild(d); }); }
+function removeImage(i){ currentImages.splice(i,1); renderImagePreview(); }
+
+/* ---------- Audio recorder ---------- */
+async function startRec(){
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+    mediaRecorder.onstop = ()=> {
+      const blob = new Blob(audioChunks,{type:'audio/webm'});
+      currentAudio = URL.createObjectURL(blob);
+      document.getElementById('audio-preview').innerHTML = `<audio controls src="${currentAudio}"></audio><button class="mac-button" onclick="removeAudio()">Remove</button>`;
+      stream.getTracks().forEach(t=>t.stop());
+    };
+    mediaRecorder.start();
+    document.getElementById('rec-start').disabled=true; document.getElementById('rec-stop').disabled=false; document.getElementById('rec-status').textContent='Recording...';
+  }catch(e){ showNotif('Microphone access denied'); }
+}
+function stopRec(){ if(mediaRecorder && mediaRecorder.state==='recording') mediaRecorder.stop(); document.getElementById('rec-start').disabled=false; document.getElementById('rec-stop').disabled=true; document.getElementById('rec-status').textContent='Saved'; }
+function removeAudio(){ currentAudio=null; document.getElementById('audio-preview').innerHTML=''; }
+
+/* ---------- Geolocation ---------- */
+async function useGPS(){
+  const btn=document.getElementById('gps-btn'); btn.textContent='⏳ Getting...'; btn.disabled=true;
+  try{
+    const pos = await new Promise((res,rej)=> navigator.geolocation.getCurrentPosition(res,rej,{enableHighAccuracy:true,timeout:10000,maximumAge:60000}));
+    const lat=pos.coords.latitude, lng=pos.coords.longitude;
+    currentCoords = {lat,lng};
+    // reverse geocode via BigDataCloud
+    let name = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    try{
+      const r = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`).then(r=>r.json());
+      if(r && (r.locality||r.city||r.principalSubdivision)) name = `${r.locality||r.city||r.principalSubdivision}${r.countryName?(', '+r.countryName):''}`;
+    }catch(e){}
+    document.getElementById('location').value = name;
+    const fm = document.getElementById('form-map'); fm.classList.remove('hidden'); renderMiniMap(fm, lat, lng);
+    const w = await fetchWeather(null, currentCoords);
+    document.getElementById('weather').value = w;
+    showNotif('Location found: ' + name);
+  }catch(err){
+    showNotif('GPS failed: ' + (err.message||err), 2200);
+  }finally{ btn.textContent='🌍 Use GPS'; btn.disabled=false; }
+}
+
+function renderMiniMap(container, lat, lng){
+  container.innerHTML=''; const map = L.map(container).setView([lat,lng],13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors'}).addTo(map);
+  L.marker([lat,lng]).addTo(map);
+  setTimeout(()=>map.invalidateSize(),120);
+}
+
+/* ---------- Weather (per entry create/edit) ---------- */
+async function fetchWeather(city=null, coords=null){
+  try{
+    let url='';
+    if(coords && coords.lat!=null && coords.lng!=null){
+      url = `https://api.openweathermap.org/data/2.5/weather?lat=${coords.lat}&lon=${coords.lng}&appid=${OPENWEATHER_KEY}&units=metric&lang=en`;
+    } else if(city){
+      url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${OPENWEATHER_KEY}&units=metric&lang=en`;
+    } else {
+      // prompt
+      const c = await askCity();
+      if(!c) return 'Weather unavailable';
+      return await fetchWeather(c, null);
+    }
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const name = data.name || city || '';
+    const temp = Math.round(data.main.temp);
+    const desc = (data.weather && data.weather[0] && data.weather[0].description) ? data.weather[0].description : '';
+    return `${temp}°C, ${desc}${name ? ' in ' + name : ''}`;
+  }catch(e){
+    console.error('weather', e);
+    return 'Could not fetch weather';
+  }
+}
+
+/* ---------- City modal ---------- */
+function askCity(){ return new Promise(resolve => { cityPromptResolve = resolve; document.getElementById('city-modal').classList.remove('hidden'); document.getElementById('city-input').focus(); }); }
+function confirmCity(){ const v=document.getElementById('city-input').value.trim(); document.getElementById('city-input').value=''; document.getElementById('city-modal').classList.add('hidden'); if(cityPromptResolve) cityPromptResolve(v||null); cityPromptResolve=null; }
+function cancelCity(){ document.getElementById('city-input').value=''; document.getElementById('city-modal').classList.add('hidden'); if(cityPromptResolve) cityPromptResolve(null); cityPromptResolve=null; }
+
+/* ---------- Submit breadcrumb ---------- */
+async function submitBreadcrumb(){
+  const note = document.getElementById('note').value.trim();
+  if(!note){ showNotif('Please enter a note'); return; }
+  const loc = document.getElementById('location').value.trim();
+  let weatherVal = document.getElementById('weather').value.trim();
+  if(!weatherVal){
+    weatherVal = await fetchWeather(loc || null, currentCoords);
+    document.getElementById('weather').value = weatherVal;
+  }
+  const entry = {
+    id: editingId || uid(),
+    type: 'breadcrumb',
+    ts: Date.now(),
+    note,
+    location: loc || '',
+    weather: weatherVal,
+    tags: [...tagsList],
+    images: [...currentImages],
+    audio: currentAudio || null,
+    coords: currentCoords ? {...currentCoords} : null,
+  };
+  if(editingId){
+    const idx = entries.findIndex(e=>e.id===editingId);
+    if(idx>=0) entries[idx] = entry;
+    editingId = null;
+    document.getElementById('delete-entry-btn').classList.add('hidden');
+  } else {
+    entries.unshift(entry);
+  }
+  save(); renderAll(); closeBreadcrumbForm(); showNotif('Saved'); document.getElementById('footer').classList.remove('hidden');
+}
+
+/* ---------- Edit & Delete ---------- */
+function editEntry(id){
+  ensureForms();
+  const e = entries.find(x=>x.id===id); if(!e) return;
+  editingId = id;
+  document.getElementById('note').value = e.note||'';
+  document.getElementById('location').value = e.location||'';
+  document.getElementById('weather').value = e.weather||'';
+  tagsList = [...(e.tags||[])]; renderTags();
+  currentImages = [...(e.images||[])]; renderImagePreview();
+  currentCoords = e.coords ? {...e.coords} : null;
+  currentAudio = e.audio || null; if(currentAudio) document.getElementById('audio-preview').innerHTML = `<audio controls src="${currentAudio}"></audio><button class="mac-button" onclick="removeAudio()">Remove</button>`;
+  document.getElementById('breadcrumb-form').classList.remove('hidden');
+  document.getElementById('delete-entry-btn').classList.remove('hidden');
+}
+function deleteEditingEntry(){ if(!editingId) return; if(!confirm('Delete this entry?')) return; entries = entries.filter(e=>e.id!==editingId); editingId=null; save(); renderAll(); closeBreadcrumbForm(); showNotif('Deleted'); }
+
+/* ---------- Time logs ---------- */
+function submitTimeLog(){
+  const cat = document.getElementById('time-category').value;
+  const startVal = document.getElementById('time-start').value;
+  const dur = parseFloat(document.getElementById('time-duration').value) || 0;
+  const unit = document.getElementById('time-unit').value;
+  if(!startVal){ showNotif('Select a start time'); return; }
+  let minutes = unit === 'hours' ? Math.round(dur*60) : Math.round(dur);
+  const startTs = new Date(startVal).getTime();
+  const endTs = startTs + minutes*60*1000;
+  const entry = { id: uid(), type:'time', ts:startTs, end:endTs, category:cat, durationMinutes:minutes, note: `${cat} — ${minutes} min` };
+  entries.unshift(entry); save(); renderAll(); closeTimeForm(); showNotif('Time log created'); document.getElementById('footer').classList.remove('hidden');
+}
+
+/* ---------- Track quick create ---------- */
+function createTrack(cat){
+  const entry = { id: uid(), type:'track', ts:Date.now(), category:cat, note: `${cat}` };
+  entries.unshift(entry); save(); renderAll(); closeTrackMenu(); showNotif('Track created');
+}
+
+/* ---------- Spent ---------- */
+function submitSpent(){
+  const desc = document.getElementById('spent-desc').value.trim();
+  const amt = parseFloat(document.getElementById('spent-amt').value)||0;
+  const cat = document.getElementById('spent-cat').value.trim()||'Expense';
+  if(!desc || !amt){ showNotif('Enter description and amount'); return; }
+  const entry = { id: uid(), type:'spent', ts:Date.now(), amount:amt, currency:'EUR', category:cat, note:desc };
+  entries.unshift(entry); save(); renderAll(); closeSpentForm(); showNotif('Expense saved');
+}
+
+/* ---------- Render timeline ---------- */
+function renderAll(){
+  const timeline = document.getElementById('timeline'); const empty = document.getElementById('empty-state');
+  if(entries.length===0){ timeline.innerHTML=''; empty.classList.remove('hidden'); document.getElementById('footer').classList.add('hidden'); return; }
+  empty.classList.add('hidden'); document.getElementById('footer').classList.remove('hidden');
+
+  const byDay = {};
+  entries.forEach(e=>{ const day = new Date(e.ts).toDateString(); if(!byDay[day]) byDay[day]=[]; byDay[day].push(e); });
+  const days = Object.keys(byDay).sort((a,b)=> new Date(b) - new Date(a));
+  let html = '<div class="timeline"><div class="timeline-line"></div>';
+  days.forEach(day=>{
+    const arr = byDay[day].sort((a,b)=> b.ts - a.ts);
+    const dateObj = new Date(day);
+    html += `<div class="day-block"><div class="day-header"><div>${dateObj.toDateString()}</div><div>▼</div></div><div class="day-content">`;
+    arr.forEach(e=> html += renderEntry(e));
+    html += '</div></div>';
+  });
+  html += '</div>';
+  timeline.innerHTML = html;
+}
+
+/* ---------- Render entry ---------- */
+function renderEntry(e){
+  let meta = '';
+  if(e.location) meta += `📍 ${e.location} `;
+  if(e.weather) meta += `☁️ ${e.weather} `;
+  if(e.type === 'time'){ meta += `⏱ ${formatTime(e.ts)} — ${formatTime(e.end)} (${e.durationMinutes} min)`; }
+  if(e.type === 'spent'){ meta += `💰 ${e.amount}`; }
+  const imagesHtml = e.images && e.images.length ? `<button class="mac-button" onclick="togglePreview('${e.id}')">👁️ Images (${e.images.length})</button><div id="preview-${e.id}" class="preview-row" style="display:none">${(e.images||[]).map(src=>`<div class="preview-item"><img src="${src}" onclick="openImage('${src}')"></div>`).join('')}</div>` : '';
+  const mapHtml = e.coords ? `<div class="preview-map" onclick="openMap(${e.coords.lat},${e.coords.lng},'${(e.location||'').replace(/'/g,"\\'")}')"></div>` : '';
+  const audioHtml = e.audio ? `<button class="mac-button" onclick="playAudio('${e.audio}')">🔊 Play</button><audio id="audio-${e.id}" src="${e.audio}"></audio>` : '';
+  const note = (e.note||'').replace(/\n/g,'<br>');
+  return `<div class="entry" data-id="${e.id}">
+    <div class="entry-time">${new Date(e.ts).toLocaleString()}</div>
+    <div class="entry-meta">${meta}</div>
+    <div class="entry-note" id="note-${e.id}">${note}</div>
+    ${ (e.note && e.note.length>200) ? `<button class="mac-button" onclick="toggleRead('${e.id}')">Read more</button>` : '' }
+    ${imagesHtml}
+    ${audioHtml}
+    ${mapHtml}
+    <div style="position:absolute;right:12px;bottom:12px">
+      <button class="mac-button" onclick="editEntry('${e.id}')">✏️ Edit</button>
+      <button class="mac-button" onclick="deleteEntryById('${e.id}')">🗑️</button>
+    </div>
+  </div>`;
+}
+
+function formatTime(ts){ const d=new Date(ts); return d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); }
+function toggleRead(id){ const n=document.getElementById('note-'+id); if(!n) return; n.classList.toggle('expanded'); }
+function togglePreview(id){ const el=document.getElementById('preview-'+id); if(!el) return; el.style.display = el.style.display === 'flex' || el.style.display === 'block' ? 'none' : 'flex'; }
+function openImage(src){ document.getElementById('image-modal-img').src = src; document.getElementById('image-modal').classList.remove('hidden'); }
+function openMap(lat,lng,title){ document.getElementById('map-modal').classList.remove('hidden'); setTimeout(()=>renderModalMap(lat,lng,title),120); }
+function closeModal(id){ document.getElementById(id).classList.add('hidden'); if(id==='map-modal') document.getElementById('map-modal-container').innerHTML=''; }
+function playAudio(src){ const a=new Audio(src); a.play(); }
+
+/* ---------- Delete entry by id ---------- */
+function deleteEntryById(id){ if(!confirm('Delete this entry?')) return; entries = entries.filter(e=>e.id!==id); save(); renderAll(); showNotif('Deleted'); }
+
+/* ---------- Exports ---------- */
+function exportCSV(){ const rows = entries.map(e=>[e.id, new Date(e.ts).toISOString(), e.type, (e.note||'').replace(/"/g,'""'), e.location||'', e.weather||'', (e.tags||[]).join('|'), (e.images||[]).length, e.coords?`${e.coords.lat},${e.coords.lng}`:''].map(v=>`"${v}"`).join(',')).join('\n'); const csv = `"id","timestamp","type","note","location","weather","tags","images","coords"\n`+rows; download(csv,'text/csv','breadcrumbs-'+Date.now()+'.csv'); }
+function exportICS(){ const ev = entries.map(e=> { const dt = new Date(e.ts); const dtstr = dt.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z'; return `BEGIN:VEVENT\nUID:${e.id}@breadcrumbs\nDTSTAMP:${dtstr}\nDTSTART:${dtstr}\nSUMMARY:${(e.note||'').substring(0,80)}\nDESCRIPTION:${(e.note||'')}\nEND:VEVENT`; }).join('\n'); const ics = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Breadcrumbs Timeline//EN\n${ev}\nEND:VCALENDAR`; download(ics,'text/calendar','breadcrumbs-'+Date.now()+'.ics'); }
+function exportJSON(){ download(JSON.stringify(entries,null,2),'application/json','breadcrumbs-'+Date.now()+'.json'); }
+function download(content,mime,filename){ const blob=new Blob([content],{type:mime}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=filename; a.click(); URL.revokeObjectURL(url); }
+
+/* ---------- Modal map ---------- */
+function renderModalMap(lat,lng,title){ const el=document.getElementById('map-modal-container'); el.innerHTML=''; const map=L.map(el).setView([lat,lng],13); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors'}).addTo(map); L.marker([lat,lng]).addTo(map).bindPopup(title||'Location').openPopup(); setTimeout(()=>map.invalidateSize(),120); }
+
+/* ---------- Location filter ---------- */
+function updateLocationFilter(){ const sel=document.getElementById('location-filter'); const locs=[...new Set(entries.map(e=>e.location).filter(Boolean))]; sel.innerHTML = '<option value="all">All locations</option>' + locs.map(l=>`<option value="${l}">${l}</option>`).join(''); sel.onchange = ()=>{ if(sel.value==='all') renderAll(); else { const filtered = entries.filter(e=>e.location===sel.value); document.getElementById('timeline').innerHTML = '<div class="timeline"><div class="timeline-line"></div>' + filtered.map(renderEntry).join('') + '</div>'; } }; }
+
+/* ---------- Search & filters ---------- */
+document.getElementById('search').addEventListener('input', (ev)=>{ const q=ev.target.value.trim().toLowerCase(); if(!q) return renderAll(); const filtered = entries.filter(en=> (en.note||'').toLowerCase().includes(q) || (en.tags||[]).join(' ').toLowerCase().includes(q) || (en.location||'').toLowerCase().includes(q)); document.getElementById('timeline').innerHTML = '<div class="timeline"><div class="timeline-line"></div>' + filtered.map(renderEntry).join('') + '</div>'; });
+function clearFilters(){ document.getElementById('search').value=''; renderAll(); }
+
+/* ---------- Init ---------- */
+window.addEventListener('load', ()=>{ ensureForms(); load(); document.getElementById('footer').classList.toggle('hidden', entries.length===0); });
+
+</script>
+</body>
+</html>
