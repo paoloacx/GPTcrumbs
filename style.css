@@ -1,226 +1,367 @@
-/* ===== Breadcrumbs Timeline – Original Look ===== */
+/* script.js - optimized replica
+   Replace 'pinaquituclave' with your real keys
+*/
 
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f5f5f5;
-  color: #333;
-  margin: 0;
-  padding: 0;
+const cfg = {
+  firebaseConfig: {
+    apiKey: "AIzaSyAb-MLu8atl5hruOPLDhgftjkjc_1M2038",
+    authDomain: "breadcrumbs-8b59e.firebaseapp.com",
+    projectId: "breadcrumbs-8b59e",
+    storageBucket: "breadcrumbs-8b59e.firebasestorage.app",
+    messagingSenderId: "912286191427",
+    appId: "1:912286191427:web:e78b665df6a6ff6d8529f6",
+    measurementId: "G-GZYTDYNSRB"
+  },
+  WEATHER_API_KEY: "317f7bcb07cf05e2c6265176c502a4bb"
+};
+
+// init firebase compat if available
+if (window.firebase && firebase.initializeApp) {
+  try { firebase.initializeApp(cfg.firebaseConfig); } catch(e){}
+}
+const auth = window.firebase && firebase.auth ? firebase.auth() : null;
+const db = window.firebase && firebase.firestore ? firebase.firestore() : null;
+const storage = window.firebase && firebase.storage ? firebase.storage() : null;
+
+// DOM shortcuts
+const $ = id => document.getElementById(id);
+const qs = s => document.querySelector(s);
+
+const authContainer = $('login-screen');
+const mainApp = $('main-app');
+const signInBtn = $('login-google');
+const continueOfflineBtn = $('continue-offline');
+const signOutBtn = $('sign-out');
+const addBreadcrumbBtn = $('add-breadcrumb');
+const timeBtn = $('time-event');
+const trackBtn = $('quick-track');
+const spentBtn = $('spent');
+const timeline = $('timeline');
+const syncStatus = $('sync-status') || { textContent: '' };
+const userEmailShort = $('user-email-short') || { textContent: '' };
+
+const formModal = $('breadcrumb-modal');
+const saveEntryBtn = $('save-entry');
+const cancelEntryBtn = $('cancel-entry');
+const noteEl = $('note');
+const moodEl = $('mood');
+const locationEl = $('location');
+const weatherEl = $('weather');
+const imagesEl = $('images');
+const audioPreviewEl = $('audio-preview');
+const recordBtn = $('record');
+const stopBtn = $('stop');
+const gpsBtn = $('use-gps');
+
+const timerModal = $('time-modal');
+const durationsEl = $('durations');
+const activitiesEl = $('activities');
+const createEventBtn = $('create-event');
+const cancelTimeBtn = $('cancel-time');
+
+const trackModal = $('track-modal');
+const closeTrackBtn = $('close-track');
+
+const spentModal = $('spent-modal');
+const saveSpentBtn = $('save-spent');
+const cancelSpentBtn = $('cancel-spent');
+
+const previewModal = $('preview-modal');
+const previewBody = $('preview-body');
+
+let state = {
+  entries: [],
+  currentUser: null,
+  isOffline: false,
+  currentImages: [],
+  currentAudio: null,
+  currentCoords: null,
+  editingId: null,
+  mediaRecorder: null,
+  audioChunks: []
+};
+
+// util
+const escapeHtml = s => s? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : '';
+
+// storage
+const STORAGE_KEY = 'timeline-entries-v1';
+function loadLocal(){ try{ const raw = localStorage.getItem(STORAGE_KEY); state.entries = raw? JSON.parse(raw) : []; }catch(e){ state.entries = []; } }
+function saveLocal(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state.entries)); }catch(e){ console.warn(e); } }
+
+// sync firebase
+async function saveToFirebase(){ if(!state.currentUser||!db) return; try{ await Promise.all(state.entries.map(e=> db.collection('users').doc(state.currentUser.uid).collection('entries').doc(String(e.id)).set(e) )); updateSync('online'); }catch(e){ console.error('saveToFirebase',e); updateSync('offline'); }}
+async function loadFromFirebase(){ if(!state.currentUser||!db) return; updateSync('syncing'); try{ const snap = await db.collection('users').doc(state.currentUser.uid).collection('entries').orderBy('timestamp','desc').get(); state.entries = []; snap.forEach(d=> state.entries.push({ id:d.id, ...d.data() })); render(); updateSync('online'); }catch(e){ console.error('loadFromFirebase',e); updateSync('offline'); loadLocal(); render(); }}
+
+// UI
+function updateSync(s){ if(!syncStatus) return; if(s==='online'){ syncStatus.textContent='● Online'; syncStatus.style.color='#0a0'; } else if(s==='syncing'){ syncStatus.textContent='↻ Syncing...'; syncStatus.style.color='#fa0'; } else { syncStatus.textContent='● Offline'; syncStatus.style.color='#f33'; } }
+function showApp(){ if(authContainer) authContainer.classList.add('hidden'); if(mainApp) mainApp.classList.remove('hidden'); if(state.currentUser && userEmailShort) userEmailShort.textContent = state.currentUser.email?.length>20? state.currentUser.email.slice(0,17)+'...': state.currentUser.email || ''; }
+function toggle(el, val){ if(!el) return; el.classList.toggle('hidden', val===false); }
+function openModal(el){ if(!el) return; el.classList.remove('hidden'); }
+function closeModal(el){ if(!el) return; el.classList.add('hidden'); }
+
+// render timeline
+function render(){
+  if(!timeline) return;
+  if(!state.entries || state.entries.length===0){ timeline.innerHTML = `<p class="no-entries">📍 No entries yet<br>Create your first breadcrumb</p>`; return; }
+  const days = {};
+  state.entries.forEach(e=>{
+    const day = (new Date(e.timestamp)).toISOString().split('T')[0];
+    if(!days[day]) days[day]=[];
+    days[day].push(e);
+  });
+  const keys = Object.keys(days).sort((a,b)=>b.localeCompare(a));
+  let html = '';
+  keys.forEach(k=>{
+    html += `<div class="day-block"><div class="day-header">${k}</div><div class="day-content">`;
+    days[k].forEach(entry=> html += entryHTML(entry));
+    html += `</div></div>`;
+  });
+  timeline.innerHTML = html;
 }
 
-h2, h3 {
-  text-align: center;
+function entryHTML(e){
+  const id = e.id || Date.now();
+  const mood = e.mood? `<span class="mood">${escapeHtml(e.mood.emoji||e.mood)}</span>` : '';
+  const time = `<div class="meta">${new Date(e.timestamp).toLocaleString()}</div>`;
+  const note = `<div class="note">${escapeHtml(e.note||'')}</div>`;
+  const loc = e.location? `<div class="meta">📍 ${escapeHtml(e.location)}</div>` : '';
+  const weather = e.weather? `<div class="meta">☁️ ${escapeHtml(e.weather)}</div>` : '';
+  const images = (e.images||[]).length? `<div class="images">${(e.images||[]).map(i=>`<img src="${i}" style="max-width:120px;border-radius:8px;margin-right:8px" />`).join('')}</div>` : '';
+  const audio = e.audio? `<audio controls src="${e.audio}"></audio>` : '';
+  const extra = e.isTimedActivity? `<div class="meta">⏱️ ${escapeHtml(e.activity)} - ${e.duration}min</div>` : '';
+  const spent = e.isSpent? `<div class="meta">💰 €${(e.spentAmount||0).toFixed(2)}</div>` : '';
+  return `<div class="timeline-entry" id="entry-${id}"><div class="entry-controls"><button class="btn small" onclick="editEntry(${id})">✏️ Edit</button><button class="btn small neutral" onclick="previewEntry(${id})">🔍 Preview</button></div>${time}<div style="display:flex;gap:8px;align-items:flex-start">${mood}${note}</div>${loc}${weather}${images}${audio}${extra}${spent}</div>`;
 }
 
-button {
-  background-color: #0078d7;
-  color: white;
-  border: none;
-  padding: 10px 14px;
-  border-radius: 6px;
-  font-size: 15px;
-  margin: 5px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
+// CRUD
+function openNew(){ state.editingId = null; state.currentImages=[]; state.currentAudio=null; state.currentCoords=null; noteEl.value=''; locationEl.value=''; weatherEl.value=''; imagesEl.value=''; audioPreviewEl.classList.add('hidden'); openModal(formModal); saveEntryBtn.textContent='💾 Save'; $('delete-entry')?.classList?.add('hidden'); }
+function saveEntry(){
+  const note = noteEl.value.trim();
+  if(!note){ alert('Please write a note'); return; }
+  const moodVal = moodEl.value;
+  const entry = {
+    id: state.editingId || Date.now(),
+    timestamp: new Date().toISOString(),
+    note,
+    mood: { emoji: moodVal, label: moodVal },
+    location: locationEl.value || '',
+    weather: weatherEl.value || '',
+    images: [...state.currentImages],
+    audio: state.currentAudio || null,
+    coords: state.currentCoords || null
+  };
+  if(state.editingId){
+    const i = state.entries.findIndex(x=>x.id===state.editingId);
+    if(i>-1) state.entries[i]=entry;
+  } else state.entries.unshift(entry);
+  saveLocal();
+  if(!state.isOffline && state.currentUser) saveToFirebase().catch(()=>{});
+  render();
+  closeModal(formModal);
+}
+function editEntry(id){
+  const entry = state.entries.find(x=>x.id===id); if(!entry) return;
+  state.editingId = id;
+  noteEl.value = entry.note || '';
+  locationEl.value = entry.location || '';
+  weatherEl.value = entry.weather || '';
+  state.currentImages = [...(entry.images||[])];
+  state.currentAudio = entry.audio || null;
+  state.currentCoords = entry.coords? {...entry.coords} : null;
+  renderImagePreviews();
+  renderAudioPreview();
+  saveEntryBtn.textContent='💾 Update';
+  openModal(formModal);
+}
+function deleteEntry(){
+  if(!state.editingId) return;
+  if(!confirm('Delete this entry?')) return;
+  state.entries = state.entries.filter(e=>e.id!==state.editingId);
+  if(!state.isOffline && state.currentUser && db) db.collection('users').doc(state.currentUser.uid).collection('entries').doc(String(state.editingId)).delete().catch(()=>{});
+  saveLocal(); render(); closeModal(formModal);
 }
 
-button:hover {
-  background-color: #005fa3;
+// images
+function handleImageFiles(files){
+  Array.from(files||[]).forEach(f=>{
+    const r = new FileReader();
+    r.onload = e => { state.currentImages.push(e.target.result); renderImagePreviews(); };
+    r.readAsDataURL(f);
+  });
+}
+function renderImagePreviews(){ const p = $('image-previews'); if(!p) return; p.innerHTML = state.currentImages.map((img,i)=>`<div class="thumb"><img src="${img}" style="width:120px;border-radius:8px"/><div><button class="btn small danger" onclick="removeImage(${i})">✕</button></div></div>`).join(''); }
+function removeImage(i){ state.currentImages.splice(i,1); renderImagePreviews(); }
+
+// audio
+async function startRecording(){
+  try{
+    const s = await navigator.mediaDevices.getUserMedia({ audio:true });
+    state.mediaRecorder = new MediaRecorder(s);
+    state.audioChunks = [];
+    state.mediaRecorder.ondataavailable = e=> state.audioChunks.push(e.data);
+    state.mediaRecorder.onstop = async ()=>{
+      const blob = new Blob(state.audioChunks,{ type:'audio/webm' });
+      const fr = new FileReader(); fr.onloadend = ()=>{ state.currentAudio = fr.result; renderAudioPreview(); }; fr.readAsDataURL(blob);
+      s.getTracks().forEach(t=>t.stop());
+    };
+    state.mediaRecorder.start();
+    recordBtn.disabled = true; stopBtn.disabled = false;
+  }catch(e){ alert('Microphone error'); console.error(e); }
+}
+function stopRecording(){ if(state.mediaRecorder && state.mediaRecorder.state!=='inactive') state.mediaRecorder.stop(); recordBtn.disabled=false; stopBtn.disabled=true; }
+function renderAudioPreview(){ if(!audioPreviewEl) return; if(state.currentAudio){ audioPreviewEl.src = state.currentAudio; audioPreviewEl.classList.remove('hidden'); } else { audioPreviewEl.src=''; audioPreviewEl.classList.add('hidden'); } }
+function removeAudio(){ state.currentAudio = null; renderAudioPreview(); }
+
+// GPS + weather + leaflet
+function getGPS(){
+  if(!navigator.geolocation){ alert('Geolocation not supported'); return; }
+  gpsBtn.textContent='⏳'; gpsBtn.disabled=true;
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const lat = pos.coords.latitude, lon = pos.coords.longitude;
+    state.currentCoords = { lat, lon };
+    locationEl.value = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+    getWeather(lat, lon);
+    gpsBtn.textContent='🌍 Use GPS'; gpsBtn.disabled=false;
+    if(!$('form-map')){ const d = document.createElement('div'); d.id='form-map'; d.style.height='180px'; d.style.marginTop='8px'; audioPreviewEl.parentNode.insertBefore(d, audioPreviewEl.nextSibling); }
+    createLeaflet('form-map', lat, lon, 13);
+  }, err=>{ alert('GPS error: '+err.message); gpsBtn.textContent='🌍 Use GPS'; gpsBtn.disabled=false; }, { enableHighAccuracy:true, timeout:10000, maximumAge:0 });
+}
+async function getWeather(lat, lon){
+  if(!cfg.WEATHER_API_KEY || cfg.WEATHER_API_KEY==='pinaquituclave') return;
+  try{
+    const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${cfg.WEATHER_API_KEY}&units=metric&lang=en`);
+    if(!res.ok) throw new Error(res.status);
+    const d = await res.json();
+    weatherEl.value = `${d.weather[0].description}, ${Math.round(d.main.temp)}°C`;
+  }catch(e){ console.warn('weather',e); }
+}
+function createLeaflet(id, lat, lon, z=13){
+  try{
+    const c = document.getElementById(id); if(!c) return;
+    if(c._leaflet_map){ try{ c._leaflet_map.remove(); }catch(e){} c._leaflet_map=null; }
+    const map = L.map(id).setView([lat, lon], z);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ attribution:'© OpenStreetMap', maxZoom:19 }).addTo(map);
+    L.marker([lat, lon]).addTo(map);
+    c._leaflet_map = map;
+    setTimeout(()=>map.invalidateSize(),100);
+  }catch(e){ console.warn('leaflet',e); }
 }
 
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+// time / track / spent
+let selDuration=null, selActivity=null;
+function initTimerUI(){
+  durationsEl.innerHTML = '';
+  [15,30,60,120,180].forEach(d=>{
+    const b = document.createElement('button'); b.textContent = d<60?`${d} min`:`${d/60} hour`; b.dataset.min=d; b.className='btn small';
+    b.addEventListener('click', ()=>{ selDuration = parseInt(b.dataset.min,10); Array.from(durationsEl.querySelectorAll('button')).forEach(x=>x.classList.remove('active')); b.classList.add('active'); checkCreateReady(); });
+    durationsEl.appendChild(b);
+  });
+  ['Reading','Sports','Work','Cleaning','Errands'].forEach(a=>{
+    const b = document.createElement('button'); b.textContent = a; b.className='btn small';
+    b.addEventListener('click', ()=>{ selActivity = a; Array.from(activitiesEl.querySelectorAll('button')).forEach(x=>x.classList.remove('active')); b.classList.add('active'); checkCreateReady(); });
+    activitiesEl.appendChild(b);
+  });
+}
+function checkCreateReady(){ createEventBtn.disabled = !(selDuration && selActivity); }
+function createTimeEvent(){ if(!selDuration||!selActivity) return; const e = { id:Date.now(), timestamp:new Date().toISOString(), isTimedActivity:true, activity:selActivity, duration:selDuration, note:`${selActivity} - ${selDuration} minutes` }; state.entries.unshift(e); saveLocal(); render(); closeModal(timerModal); selActivity=null; selDuration=null; }
+function updateTrackUI(){ if(!trackModal) return; trackModal.querySelector('#meals')?.remove(); trackModal.querySelector('#tasks')?.remove(); const html = `<div id="meals"><p>Meals:</p>${trackItemsHTML('meals')}</div><div id="tasks"><p>Tasks:</p>${trackItemsHTML('tasks')}</div>`; $('track-container').innerHTML = html; }
+function trackItemsHTML(key){ return trackItems[key].map(i=>`<button class="btn small" onclick="quickTrack('${i.replace(/'/g,"\\'")}')">${i}</button>`).join(''); }
+function quickTrack(label){ const e = { id:Date.now(), timestamp:new Date().toISOString(), isQuickTrack:true, note: label }; state.entries.unshift(e); saveLocal(); render(); }
+function saveSpent(){ const desc = $('spent-desc').value.trim(); const amt = parseFloat($('spent-amount').value); if(!desc||isNaN(amt)){ alert('Enter description and amount'); return; } const e = { id:Date.now(), timestamp:new Date().toISOString(), isSpent:true, spentAmount:amt, note:desc }; state.entries.unshift(e); saveLocal(); render(); closeModal(spentModal); }
+
+// export
+function exportCSV(){
+  const hdr = ['Date and Time','Note','Activity','Duration (min)','Location','Weather','Mood','Spent','Images'];
+  const rows = state.entries.map(e=>[ new Date(e.timestamp).toLocaleString(), e.note||'', e.activity||'', e.duration||'', e.location||'', e.weather||'', e.mood? (e.mood.emoji||e.mood.label||'') : '', e.spentAmount?e.spentAmount:'', e.images?e.images.length:0 ]);
+  const csv = [hdr, ...rows].map(r => r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `breadcrumbs-${Date.now()}.csv`; a.click();
+}
+function exportICS(){
+  const events = state.entries.map(e=>{ const d = new Date(e.timestamp); const dt = d.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z'; return `BEGIN:VEVENT\nUID:${e.id}@breadcrumbs\nDTSTAMP:${dt}\nDTSTART:${dt}\nSUMMARY:${escapeHtml((e.note||'').substring(0,50))}\nDESCRIPTION:${escapeHtml(e.note||'')}\nLOCATION:${escapeHtml(e.location||'')}\nEND:VEVENT`; }).join('\n');
+  const ics = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Breadcrumbs Timeline//ES\n${events}\nEND:VCALENDAR`;
+  const blob = new Blob([ics], { type: 'text/calendar' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `breadcrumbs-${Date.now()}.ics`; a.click();
 }
 
-button.danger {
-  background-color: #d9534f;
+// preview
+function previewEntry(id){
+  const e = state.entries.find(x=>x.id===id); if(!e) return;
+  let html = `<div style="padding:12px"><div><strong>Time:</strong> ${new Date(e.timestamp).toLocaleString()}</div>`;
+  if(e.mood) html += `<div style="margin-top:8px"><strong>Mood:</strong> ${escapeHtml(e.mood.emoji||e.mood)}</div>`;
+  html += `<div style="margin-top:8px"><strong>Note:</strong><div style="margin-top:6px">${escapeHtml(e.note||'')}</div></div>`;
+  if(e.location) html += `<div style="margin-top:8px"><strong>Location:</strong> ${escapeHtml(e.location)}</div>`;
+  if(e.weather) html += `<div style="margin-top:8px"><strong>Weather:</strong> ${escapeHtml(e.weather)}</div>`;
+  if(e.coords) html += `<div style="margin-top:8px"><strong>Map:</strong><div id="preview-map" style="height:220px;margin-top:6px"></div></div>`;
+  if(e.images && e.images.length) html += `<div style="margin-top:8px"><strong>Images:</strong><div>${e.images.map(i=>`<img src="${i}" style="max-width:120px;margin-right:8px;border-radius:8px">`).join('')}</div></div>`;
+  if(e.audio) html += `<div style="margin-top:8px"><strong>Audio:</strong><audio controls src="${e.audio}"></audio></div>`;
+  html += `</div>`;
+  previewBody.innerHTML = html; openModal(previewModal);
+  if(e.coords) setTimeout(()=>createLeaflet('preview-map', e.coords.lat, e.coords.lon, 13), 200);
 }
+function closePreview(e){ if(e && e.target !== previewModal) return; closeModal(previewModal); previewBody.innerHTML=''; }
 
-button.danger:hover {
-  background-color: #b52b27;
-}
+// init
+function boot(){
+  loadLocal();
+  render();
+  initTimerUI();
+  updateTrackUI();
+  updateSync('offline');
 
-.hidden {
-  display: none !important;
-}
+  // sample entry if none
+  if(!state.entries || !state.entries.length){ state.entries.unshift({ id: Date.now(), timestamp: new Date().toISOString(), note: 'Welcome — create your first breadcrumb', mood: { emoji:'😊', label:'Happy' } }); saveLocal(); render(); }
 
-/* ===== Login Screen ===== */
-#login-screen {
-  text-align: center;
-  padding: 40px;
-  max-width: 400px;
-  margin: 60px auto;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
+  // bindings
+  continueOfflineBtn && continueOfflineBtn.addEventListener('click', ()=>{ state.isOffline=true; authContainer?.classList?.add('hidden'); mainApp?.classList?.remove('hidden'); updateSync('offline'); render(); });
+  signInBtn && signInBtn.addEventListener('click', ()=>{ alert('Google sign-in requires Firebase keys set. Use Continue Offline for now.'); });
+  signOutBtn && signOutBtn.addEventListener('click', ()=>{ mainApp?.classList?.add('hidden'); authContainer?.classList?.remove('hidden'); });
 
-/* ===== Main App ===== */
-#main-app {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 10px 15px 40px 15px;
-}
+  addBreadcrumbBtn && addBreadcrumbBtn.addEventListener('click', openNew);
+  saveEntryBtn && saveEntryBtn.addEventListener('click', saveEntry);
+  cancelEntryBtn && cancelEntryBtn.addEventListener('click', ()=>closeModal(formModal));
+  imagesEl && imagesEl.addEventListener('change', e=> handleImageFiles(e.target.files));
 
-header {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  background-color: #fff;
-  padding: 10px;
-  border-radius: 8px;
-  margin-bottom: 15px;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
-}
+  recordBtn && recordBtn.addEventListener('click', startRecording);
+  stopBtn && stopBtn.addEventListener('click', stopRecording);
 
-header button {
-  margin: 5px;
-}
+  gpsBtn && gpsBtn.addEventListener('click', getGPS);
 
-footer {
-  text-align: center;
-  background-color: #fff;
-  padding: 10px;
-  border-radius: 8px;
-  margin-top: 20px;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
-}
+  timeBtn && timeBtn.addEventListener('click', ()=>openModal(timerModal));
+  createEventBtn && createEventBtn.addEventListener('click', createTimeEvent);
+  cancelTimeBtn && cancelTimeBtn.addEventListener('click', ()=>closeModal(timerModal));
 
-/* ===== Timeline Entries ===== */
-#timeline {
-  margin-top: 20px;
-}
+  trackBtn && trackBtn.addEventListener('click', ()=>openModal(trackModal));
+  closeTrackBtn && closeTrackBtn.addEventListener('click', ()=>closeModal(trackModal));
 
-.no-entries {
-  text-align: center;
-  color: #777;
-  font-style: italic;
-  margin-top: 50px;
-}
+  spentBtn && spentBtn.addEventListener('click', ()=>openModal(spentModal));
+  saveSpentBtn && saveSpentBtn.addEventListener('click', saveSpent);
+  cancelSpentBtn && cancelSpentBtn.addEventListener('click', ()=>closeModal(spentModal));
 
-.timeline-entry {
-  background-color: #fff;
-  border-radius: 8px;
-  padding: 15px;
-  margin-bottom: 15px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
+  $('export-csv') && $('export-csv').addEventListener('click', exportCSV);
+  $('export-ical') && $('export-ical').addEventListener('click', exportICS);
 
-.timeline-entry .mood {
-  font-size: 1.4rem;
-  margin-right: 5px;
-}
+  previewModal && previewModal.addEventListener('click', closePreview);
 
-.timeline-entry .meta {
-  font-size: 0.9rem;
-  color: #666;
-  margin-top: 5px;
-}
-
-.timeline-entry .note {
-  white-space: pre-line;
-  margin-top: 8px;
-}
-
-.timeline-entry img {
-  display: block;
-  max-width: 100%;
-  border-radius: 8px;
-  margin-top: 8px;
-}
-
-/* ===== Modals ===== */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 10px;
-  max-width: 450px;
-  width: 90%;
-  max-height: 85vh;
-  overflow-y: auto;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
-}
-
-.modal-content h3 {
-  margin-top: 0;
-  text-align: center;
-}
-
-.modal-content label {
-  display: block;
-  font-weight: bold;
-  margin-top: 10px;
-}
-
-.modal-content input,
-.modal-content textarea,
-.modal-content select {
-  width: 100%;
-  padding: 8px;
-  margin-top: 5px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-.modal-content textarea {
-  resize: vertical;
-}
-
-.modal-content .buttons {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 15px;
-}
-
-/* ===== Map ===== */
-#map {
-  width: 100%;
-  height: 250px;
-  border-radius: 8px;
-  margin-top: 10px;
-}
-
-/* ===== Audio Controls ===== */
-#audio-controls {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-#audio-preview {
-  width: 100%;
-  margin-top: 10px;
-}
-
-/* ===== Responsive ===== */
-@media (max-width: 768px) {
-  header {
-    flex-direction: column;
-    align-items: center;
+  // firebase auth listener
+  if(auth){
+    auth.onAuthStateChanged(user=>{
+      if(user){ state.currentUser = user; state.isOffline = false; showApp(); loadFromFirebase().catch(()=>{}); }
+      else { state.currentUser = null; }
+    });
+    // sign-in handler (popup)
+    signInBtn && signInBtn.addEventListener('click', ()=>{
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider).catch(e=>{ console.error('signin',e); alert('Sign-in failed: '+e.message); });
+    });
   }
-
-  header button {
-    width: 90%;
-  }
-
-  .modal-content {
-    max-width: 95%;
-  }
 }
+
+boot();
+
+// expose
+window.editEntry = editEntry;
+window.previewEntry = previewEntry;
+window.quickTrack = quickTrack;
+window.removeImage = removeImage;
+window.toggleForm = () => formModal.classList.toggle('hidden');
+
