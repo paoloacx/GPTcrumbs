@@ -1,0 +1,267 @@
+/* ====== GENERAL STYLES ====== */
+
+:root {
+  --bg-color: #f5f5f5;
+  --primary: #0078d7;
+  --accent: #4caf50;
+  --danger: #d9534f;
+  --text-color: #333;
+  --card-bg: #ffffff;
+  --border-radius: 12px;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+  font-family: "Inter", "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ====== UTILITIES ====== */
+
+.hidden {
+  display: none !important;
+}
+
+.centered {
+  text-align: center;
+  margin: auto;
+  max-width: 400px;
+  padding: 2rem;
+}
+
+button {
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 0.6rem 1.2rem;
+  margin: 0.3rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+button:hover {
+  background-color: #005fa3;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+button.danger {
+  background-color: var(--danger);
+}
+
+button.danger:hover {
+  background-color: #b52b27;
+}
+
+/* ====== HEADER ====== */
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--card-bg);
+  box-shadow: var(--shadow);
+  padding: 0.8rem 1.2rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.top-bar .right button {
+  margin-left: 0.4rem;
+}
+
+/* ====== MAIN CONTENT ====== */
+
+main {
+  flex: 1;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#timeline {
+  width: 100%;
+  max-width: 700px;
+  margin-top: 1rem;
+}
+
+.no-entries {
+  text-align: center;
+  color: #777;
+  font-style: italic;
+  margin-top: 3rem;
+}
+
+/* ====== FOOTER ====== */
+
+footer {
+  background-color: var(--card-bg);
+  box-shadow: var(--shadow);
+  padding: 0.6rem;
+  text-align: center;
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+}
+
+/* ====== MODALS ====== */
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  padding: 1rem;
+}
+
+.modal-content {
+  background: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  max-width: 420px;
+  width: 100%;
+  position: relative;
+  overflow-y: auto;
+  max-height: 90vh;
+}
+
+.modal-content h3 {
+  margin-top: 0;
+  text-align: center;
+}
+
+.modal-content label {
+  display: block;
+  margin-top: 0.8rem;
+  font-weight: 600;
+}
+
+.modal-content input,
+.modal-content textarea,
+.modal-content select {
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: var(--border-radius);
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  margin-top: 0.3rem;
+}
+
+.modal-content textarea {
+  resize: vertical;
+}
+
+.modal-content .buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1.2rem;
+}
+
+/* ====== BUTTON GROUPS ====== */
+
+#duration-options,
+#activity-options,
+#meals,
+#tasks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+}
+
+#duration-options button,
+#activity-options button,
+#meals button,
+#tasks button {
+  flex: 1 1 45%;
+  text-align: center;
+}
+
+/* ====== RESPONSIVE ====== */
+
+@media (max-width: 768px) {
+  .top-bar {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  footer button {
+    font-size: 0.9rem;
+    margin: 0.2rem;
+    padding: 0.5rem 0.8rem;
+  }
+
+  button {
+    font-size: 0.9rem;
+  }
+
+  .modal-content {
+    max-width: 90%;
+  }
+}
+
+/* ====== TIMELINE ENTRIES ====== */
+
+.timeline-entry {
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  transition: transform 0.2s ease;
+}
+
+.timeline-entry:hover {
+  transform: translateY(-3px);
+}
+
+.timeline-entry .mood {
+  font-size: 1.4rem;
+  margin-right: 0.3rem;
+}
+
+.timeline-entry .meta {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 0.3rem;
+}
+
+.timeline-entry .note {
+  white-space: pre-line;
+  margin-top: 0.5rem;
+}
+
+/* ====== SCROLLBAR (nice touch for desktop) ====== */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #bbb;
+}
