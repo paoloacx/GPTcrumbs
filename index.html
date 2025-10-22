@@ -1,238 +1,176 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Breadcrumbs Timeline (runnable)</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <style>
-    :root{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;color:#222}
-    body{margin:0;padding:16px;background:#f4f6f8}
-    header{display:flex;gap:12px;align-items:center;margin-bottom:12px}
-    button{cursor:pointer}
-    .hidden{display:none}
-    .card{background:#fff;border-radius:8px;padding:12px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
-    #timeline-container .breadcrumb-entry{border-left:3px solid #e6e6e6;padding:10px;margin:8px 0;border-radius:6px;background:#fff}
-    .track-btn{margin:4px;padding:6px 10px;border-radius:6px;border:1px solid #ddd;background:#fafafa}
-    .preview-map-full{height:200px}
-    #form-window, #timer-window, #track-window, #spent-window{position:fixed;right:20px;bottom:20px;width:320px;max-width:90%;}
-    #preview-modal{position:fixed;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.4);z-index:999;visibility:hidden;opacity:0;transition:opacity .15s}
-    #preview-modal.show{visibility:visible;opacity:1}
-    #preview-body{background:#fff;padding:16px;border-radius:8px;max-height:80vh;overflow:auto;width:90%;max-width:800px}
-    input[type=file]{display:block}
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Breadcrumbs Timeline</title>
+
+  <!-- Main stylesheet -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Leaflet for maps -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-sA+e2atCf0fZp4wK0qWQJ0p+1NPMhUQkk+f5QkM7N0k="
+    crossorigin=""
+  />
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-o9N1j9LFb7R2D0JXWm0A6YqQK/G6lH3sZtO6zY1C6s8="
+    crossorigin=""
+  ></script>
+
+  <!-- Icons -->
+  <link rel="icon" href="assets/icon.png" />
+
 </head>
 <body>
-  <header>
-    <h1>Breadcrumbs Timeline</h1>
-    <div id="sync-status">● Offline</div>
-    <div id="user-email-short" style="margin-left:auto"></div>
-    <div id="user-avatar" style="width:32px;height:32px;background:#ddd;border-radius:50%;display:none"></div>
-  </header>
+  <!-- LOGIN / OFFLINE SCREEN -->
+  <section id="login-screen" class="centered">
+    <h2>Offline Breadcrumbs Timeline</h2>
+    <p>Sign in to sync your data</p>
+    <button id="login-google">🔐 Sign in with Google</button>
+    <p>Or continue without account<br />(data saved locally only)</p>
+    <button id="continue-offline">Continue Offline</button>
+  </section>
 
-  <!-- Auth container -->
-  <div id="auth-container" class="card">
-    <strong>Offline Breadcrumbs Timeline</strong>
-    <div style="margin-top:8px">
-      <button id="sign-in-btn">🔐 Sign in with Google</button>
-      <button id="continue-offline-btn">Continue Offline</button>
-    </div>
-  </div>
+  <!-- MAIN APP -->
+  <section id="app-screen" class="hidden">
+    <header class="top-bar">
+      <div class="left">
+        <button id="signout-btn" class="danger">🚪 Sign Out</button>
+      </div>
+      <div class="right">
+        <button id="add-breadcrumb">➕ Breadcrumb</button>
+        <button id="time-btn">⏱️ Time</button>
+        <button id="track-btn">📊 Track</button>
+        <button id="spent-btn">💰 Spent</button>
+      </div>
+    </header>
 
-  <!-- Main app -->
-  <div id="main-app" class="hidden">
-    <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
-      <button id="add-entry-btn">➕ Breadcrumb</button>
-      <button id="time-btn">⏱️ Time</button>
-      <button id="track-btn">📊 Track</button>
-      <button id="spent-btn">💰 Spent</button>
-      <button id="export-csv">Export CSV</button>
-      <button id="export-ics">Export iCal</button>
-    </div>
+    <!-- MAIN CONTENT -->
+    <main>
+      <div id="timeline">
+        <p class="no-entries">📍 No entries yet<br />Create your first breadcrumb</p>
+      </div>
+    </main>
 
-    <div id="empty-state" class="card">📍 No entries yet — Create your first breadcrumb</div>
+    <!-- SETTINGS FOOTER -->
+    <footer>
+      <button id="save-settings">💾 Save Settings</button>
+      <button id="export-csv">💾 Export CSV</button>
+      <button id="export-ical">📅 Export iCal</button>
+      <button id="open-settings">⚙️ Settings</button>
+    </footer>
+  </section>
 
-    <div id="timeline-container" style="margin-top:12px"></div>
+  <!-- MODAL: BREADCRUMB FORM -->
+  <div id="form-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3>New Entry</h3>
 
-    <footer id="footer" style="display:none;margin-top:12px">Footer area</footer>
-  </div>
+      <label>Mood:</label>
+      <select id="mood-select">
+        <option value="😊">😊</option>
+        <option value="😐">😐</option>
+        <option value="😞">😞</option>
+      </select>
+      <button id="config-mood">⚙️</button>
 
-  <!-- Form window (floating) -->
-  <div id="form-window" class="card hidden">
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <h3 style="margin:0">New Entry</h3>
-      <div>
-        <button id="save-btn">💾 Save</button>
-        <button id="cancel-btn">Cancel</button>
-        <button id="delete-btn" class="hidden">🗑️ Delete</button>
+      <label>Note:</label>
+      <textarea id="note-input" rows="3" placeholder="Write a note..."></textarea>
+
+      <label>Location:</label>
+      <input type="text" id="location-input" placeholder="Enter location" />
+      <button id="use-gps">🌍 Use GPS</button>
+
+      <label>Weather:</label>
+      <input type="text" id="weather-input" placeholder="e.g. Sunny" />
+
+      <label>Images:</label>
+      <input type="file" id="image-input" multiple accept="image/*" />
+
+      <div class="buttons">
+        <button id="save-entry">💾 Save</button>
+        <button id="cancel-entry">Cancel</button>
       </div>
     </div>
-    <div style="margin-top:8px">
-      <div>Mood: <button id="mood-config-toggle">⚙️</button></div>
-      <div id="mood-selector"></div>
-      <div id="mood-config" class="hidden card" style="margin-top:8px"><div id="mood-config-list"></div><button id="save-mood">Save Configuration</button></div>
-      <div style="margin-top:8px">Note: <textarea id="note-input" rows="4" style="width:100%"></textarea></div>
-      <div style="margin-top:8px">Location: <input id="location-input" type="text" style="width:70%"><button id="gps-btn">🌍 Use GPS</button></div>
-      <div style="margin-top:8px">Weather: <input id="weather-input" type="text" style="width:100%"></div>
-      <div style="margin-top:8px">Images: <input id="image-input" type="file" multiple></div>
-      <div id="image-previews"></div>
-      <div style="margin-top:8px">Audio: <div class="audio-recorder"><button id="record-btn">🔴 Record</button><button id="stop-record-btn" disabled>⏹️ Stop</button></div><div id="audio-preview"></div></div>
+  </div>
+
+  <!-- MODAL: TIME TRACKER -->
+  <div id="time-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Time Event</h3>
+      <label>Duration:</label>
+      <div id="duration-options">
+        <button data-min="15">15 min</button>
+        <button data-min="30">30 min</button>
+        <button data-min="60">1 hour</button>
+        <button data-min="120">2 hours</button>
+        <button data-min="180">3 hours</button>
+      </div>
+
+      <label>Activity:</label>
+      <div id="activity-options">
+        <button>📚 Reading</button>
+        <button>🏃 Sports</button>
+        <button>💼 Work</button>
+        <button>🧹 Cleaning</button>
+        <button>🛒 Errands</button>
+      </div>
+
+      <div class="buttons">
+        <button id="create-time-event">Create Event</button>
+        <button id="cancel-time-event">Cancel</button>
+      </div>
     </div>
   </div>
 
-  <!-- Timer window -->
-  <div id="timer-window" class="card hidden">
-    <h4>Time Event</h4>
-    <div id="duration-selector"></div>
-    <div id="activity-selector"></div>
-    <div style="margin-top:8px"><button id="create-time-btn" disabled>Create Event</button><button id="close-timer">Close</button></div>
+  <!-- MODAL: QUICK TRACK -->
+  <div id="track-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Quick Track</h3>
+
+      <div id="meals">
+        <p>Meals:</p>
+        <button>🍳 Breakfast</button>
+        <button>🥗 Lunch</button>
+        <button>🍽️ Dinner</button>
+        <button>☕ Snack</button>
+      </div>
+
+      <div id="tasks">
+        <p>Tasks:</p>
+        <button>💊 Medicine</button>
+        <button>💧 Water</button>
+        <button>🚶 Walk</button>
+        <button>📞 Call</button>
+      </div>
+
+      <div class="buttons">
+        <button id="close-track">Close</button>
+      </div>
+    </div>
   </div>
 
-  <!-- Track window -->
-  <div id="track-window" class="card hidden">
-    <h4>Quick Track</h4>
-    <div id="track-container"></div>
-    <div id="track-meals"></div>
-    <div id="track-tasks"></div>
+  <!-- MODAL: SPENT -->
+  <div id="spent-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Spent</h3>
+      <label>Description:</label>
+      <input type="text" id="spent-desc" placeholder="What did you spend on?" />
+      <label>Amount (€):</label>
+      <input type="number" id="spent-amount" step="0.01" min="0" />
+
+      <div class="buttons">
+        <button id="save-spent">💾 Save</button>
+        <button id="cancel-spent">Cancel</button>
+      </div>
+    </div>
   </div>
 
-  <!-- Spent window -->
-  <div id="spent-window" class="card hidden">
-    <h4>Spent</h4>
-    <div>Description: <input id="spent-description" type="text" style="width:100%"></div>
-    <div>Amount: <input id="spent-amount" type="number" style="width:100%"></div>
-    <div style="margin-top:8px"><button id="save-spent">Save</button><button id="close-spent">Close</button></div>
-  </div>
-
-  <!-- Preview modal -->
-  <div id="preview-modal"><div id="preview-body"></div></div>
-
-  <script>
-    // --- Begin JS (same logic as analyzed) ---
-    // Firebase config & init (kept as in uploaded file)
-    const firebaseConfig = {
-      apiKey: "AIzaSyAb-MLu8atl5hruOPLDhgftjkjc_1M2038",
-      authDomain: "breadcrumbs-8b59e.firebaseapp.com",
-      projectId: "breadcrumbs-8b59e",
-      storageBucket: "breadcrumbs-8b59e.firebasestorage.app",
-      messagingSenderId: "912286191427",
-      appId: "1:912286191427:web:e78b665df6a6ff6d8529f6",
-      measurementId: "G-GZYTDYNSRB"
-    };
-    if (window.firebase && firebase.initializeApp) try { firebase.initializeApp(firebaseConfig); } catch(e) { /* already inited */ }
-    const auth = (window.firebase && firebase.auth) ? firebase.auth() : { onAuthStateChanged: () => {} };
-    const db = (window.firebase && firebase.firestore) ? firebase.firestore() : null;
-    const storage = (window.firebase && firebase.storage) ? firebase.storage() : null;
-
-    const WEATHER_API_KEY = '317f7bcb07cf05e2c6265176c502a4bb';
-
-    // App state
-    let currentUser=null,isOfflineMode=false;let entries=[];let currentImages=[];let currentAudio=null;let currentCoords=null;let editingEntryId=null;let selectedMood=null;let selectedDuration=null;let selectedActivity=null;let mediaRecorder=null;let audioChunks=[];
-
-    let timeDurations=[15,30,60,120,180];
-    let timeActivities=['Reading','Sports','Work','Cleaning','Errands'];
-    let trackItems={meals:['🍳 Breakfast','🥗 Lunch','🍽️ Dinner','☕ Snack'],tasks:['💊 Medicine','💧 Water','🚶 Walk','📞 Call']};
-    const defaultMoods=[{emoji:'😊',label:'Happy'},{emoji:'😢',label:'Sad'},{emoji:'😡',label:'Angry'},{emoji:'😰',label:'Anxious'},{emoji:'😴',label:'Tired'}];
-    let moods=[...defaultMoods];
-
-    function escapeHtml(str){if(!str&&str!==0)return'';return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
-
-    function removeLeafletMap(containerId){const container=document.getElementById(containerId);if(!container)return; if(container._leaflet_map){try{container._leaflet_map.remove();}catch(e){}container._leaflet_map=null;}}
-    function createLeafletMap(containerId,lat,lon,zoom=13){removeLeafletMap(containerId);try{const map=L.map(containerId).setView([lat,lon],zoom);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19}).addTo(map);L.marker([lat,lon]).addTo(map);const container=document.getElementById(containerId); if(container)container._leaflet_map=map; setTimeout(()=>map.invalidateSize(),100);return map;}catch(e){console.warn('Leaflet error',e);}}
-
-    function loadSettings(){const savedDurations=localStorage.getItem('time-durations');const savedActivities=localStorage.getItem('time-activities');const savedTrackItems=localStorage.getItem('track-items');if(savedDurations)timeDurations=JSON.parse(savedDurations);if(savedActivities)timeActivities=JSON.parse(savedActivities);if(savedTrackItems)trackItems=JSON.parse(savedTrackItems);}function saveSettingsToStorage(){localStorage.setItem('time-durations',JSON.stringify(timeDurations));localStorage.setItem('time-activities',JSON.stringify(timeActivities));localStorage.setItem('track-items',JSON.stringify(trackItems));}
-    function loadMoodConfig(){const saved=localStorage.getItem('mood-config');if(saved)moods=JSON.parse(saved);}function saveMoodConfigData(){localStorage.setItem('mood-config',JSON.stringify(moods));}
-    function loadData(){const saved=localStorage.getItem('timeline-entries');if(saved)entries=JSON.parse(saved);renderTimeline();}
-    function saveData(){localStorage.setItem('timeline-entries',JSON.stringify(entries));if(!isOfflineMode&&currentUser){saveDataToFirebase().catch(()=>{});} }
-    async function saveDataToFirebase(){if(!currentUser||!db)return; try{await Promise.all(entries.map(entry=>{const docRef=db.collection('users').doc(currentUser.uid).collection('entries').doc(String(entry.id));return docRef.set(entry);}));updateSyncStatus('online');}catch(e){console.error('Error saving to Firebase',e);updateSyncStatus('offline');throw e;}}
-
-    function signInWithGoogle(){if(!window.firebase){alert('Firebase not loaded');return;}const provider=new firebase.auth.GoogleAuthProvider();firebase.auth().signInWithPopup(provider).catch(e=>{console.error('Google sign-in error',e);alert('Sign in error: '+e.message);});}
-    function signOutUser(){if(confirm('Sign out?')){if(window.firebase)firebase.auth().signOut().then(()=>location.reload());else location.reload();}}
-    function continueOffline(){isOfflineMode=true;showMainApp();updateSyncStatus('offline');loadData();}
-    function showMainApp(){const authContainer=document.getElementById('auth-container');const mainApp=document.getElementById('main-app');if(authContainer)authContainer.classList.add('hidden');if(mainApp)mainApp.classList.remove('hidden');if(currentUser){const email=currentUser.email||'';const shortEmail=email.length>20?email.substring(0,17)+'...':email;const userEmailEl=document.getElementById('user-email-short');const userAvatar=document.getElementById('user-avatar');if(userEmailEl)userEmailEl.textContent='👤 '+shortEmail;if(userAvatar)userAvatar.style.display='block';}}
-    function updateSyncStatus(status){const statusEl=document.getElementById('sync-status');if(!statusEl)return;if(status==='online'){statusEl.textContent='● Online';statusEl.style.color='#00ff00';}else if(status==='syncing'){statusEl.textContent='↻ Syncing...';statusEl.style.color='#ffff00';}else{statusEl.textContent='● Offline';statusEl.style.color='#ff0000';}}
-
-    async function loadDataFromFirebase(){if(!currentUser||!db)return;updateSyncStatus('syncing');try{const snapshot=await db.collection('users').doc(currentUser.uid).collection('entries').orderBy('timestamp','desc').get();entries=[];snapshot.forEach(doc=>entries.push({id:doc.id,...doc.data()}));renderTimeline();updateSyncStatus('online');}catch(e){console.error('Error loading from Firebase',e);updateSyncStatus('offline');loadData();}}
-
-    function getGPS(){const btn=document.getElementById('gps-btn');if(btn){btn.textContent='⏳ Searching...';btn.disabled=true;}if(!navigator.geolocation){alert('Geolocation not available');if(btn){btn.textContent='🌍 Use GPS';btn.disabled=false;}return;}navigator.geolocation.getCurrentPosition(position=>{const lat=position.coords.latitude;const lon=position.coords.longitude;currentCoords={lat,lon};showMiniMap(lat,lon,'form-map');getWeather(lat,lon);if(btn){btn.textContent='🌍 GPS OK';btn.disabled=false;}},error=>{console.error('GPS Error',error);alert('Error getting location: '+error.message);if(btn){btn.textContent='🌍 Use GPS';btn.disabled=false;}},{enableHighAccuracy:true,timeout:10000,maximumAge:0});}
-    async function getWeather(lat,lon){const weatherInput=document.getElementById('weather-input');const locationInput=document.getElementById('location-input');if(weatherInput)weatherInput.value='⏳ Getting weather...';try{const url=`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric&lang=en`;const response=await fetch(url);if(!response.ok)throw new Error('Weather API returned '+response.status);const data=await response.json();const temp=Math.round(data.main.temp);const description=data.weather[0].description;const emoji=getWeatherEmoji(data.weather[0].id);const city=data.name||'';if(weatherInput)weatherInput.value=`${emoji} ${description}, ${temp}°C in ${city}`;if(city&&locationInput)locationInput.value=city;}catch(e){console.error('Error getting weather',e);if(weatherInput)weatherInput.value='';alert('Could not get weather data: '+e.message);}}
-    function getWeatherEmoji(code){if(code>=200&&code<300)return '⛈️';if(code>=300&&code<400)return '🌦️';if(code>=500&&code<600)return '🌧️';if(code>=600&&code<700)return '❄️';if(code>=700&&code<800)return '🌫️';if(code===800)return '☀️';if(code>800)return '☁️';return '🌤️';}
-    function showMiniMap(lat,lon,containerId){const mapContainer=document.getElementById(containerId);if(!mapContainer)return;mapContainer.style.display='block';createLeafletMap(containerId,lat,lon,13);}
-
-    function handleImages(e){const files=Array.from(e.target.files||[]);files.forEach(file=>{const reader=new FileReader();reader.onload=e2=>{const img=new Image();img.onload=function(){const canvas=document.createElement('canvas');const ctx=canvas.getContext('2d');let width=img.width;let height=img.height;const maxSize=800;if(width>height&&width>maxSize){height=(height*maxSize)/width;width=maxSize;}else if(height>maxSize){width=(width*maxSize)/height;height=maxSize;}canvas.width=width;canvas.height=height;ctx.drawImage(img,0,0,width,height);const resizedImage=canvas.toDataURL('image/jpeg',0.8);currentImages.push(resizedImage);renderImagePreviews();};img.src=e2.target.result;};reader.readAsDataURL(file);});}
-    async function startRecording(){try{const stream=await navigator.mediaDevices.getUserMedia({audio:true});mediaRecorder=new MediaRecorder(stream);audioChunks=[];mediaRecorder.ondataavailable=ev=>audioChunks.push(ev.data);mediaRecorder.onstop=()=>{const audioBlob=new Blob(audioChunks,{type:'audio/webm'});const reader=new FileReader();reader.onloadend=()=>{currentAudio=reader.result;renderAudioPreview();};reader.readAsDataURL(audioBlob);stream.getTracks().forEach(t=>t.stop());};mediaRecorder.start();const recordBtn=document.getElementById('record-btn');const stopBtn=document.getElementById('stop-record-btn');if(recordBtn)recordBtn.disabled=true;if(stopBtn)stopBtn.disabled=false;const audioRec=document.querySelector('.audio-recorder');if(audioRec)audioRec.classList.add('recording');}catch(e){console.error('Error accessing microphone',e);alert('Could not access microphone.');}}
-    function stopRecording(){if(mediaRecorder&&mediaRecorder.state!=='inactive'){mediaRecorder.stop();const recordBtn=document.getElementById('record-btn');const stopBtn=document.getElementById('stop-record-btn');if(recordBtn)recordBtn.disabled=false;if(stopBtn)stopBtn.disabled=true;const audioRec=document.querySelector('.audio-recorder');if(audioRec)audioRec.classList.remove('recording');}}
-    function renderImagePreviews(){const container=document.getElementById('image-previews');if(!container)return;container.innerHTML=currentImages.map((img,idx)=>`<div class="image-preview"><img src="${img}" style="max-width:100px"><div class="image-remove" onclick="removeImage(${idx})">✕</div></div>`).join('');}
-    function renderAudioPreview(){const container=document.getElementById('audio-preview');if(!container)return;if(currentAudio){container.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-top:8px"><audio controls style="flex:1"><source src="${currentAudio}" type="audio/webm"></audio><button onclick="removeAudio()">✕</button></div>`;}else container.innerHTML='';}
-    function removeImage(i){currentImages.splice(i,1);renderImagePreviews();}function removeAudio(){currentAudio=null;renderAudioPreview();}
-
-    function renderMoodSelector(){const container=document.getElementById('mood-selector');if(!container)return;container.innerHTML=moods.map((m,i)=>`<button onclick="selectMood(${i})">${escapeHtml(m.emoji)} ${escapeHtml(m.label)}</button>`).join(' ');}function selectMood(i){selectedMood=i;renderMoodSelector();}
-    function toggleMoodConfig(){const panel=document.getElementById('mood-config');if(!panel)return;panel.classList.toggle('hidden');if(!panel.classList.contains('hidden'))renderMoodConfig();}function renderMoodConfig(){const container=document.getElementById('mood-config-list');if(!container)return;container.innerHTML=moods.map((m,i)=>`<div><input id="mood-emoji-${i}" value="${escapeHtml(m.emoji)}"> <input id="mood-label-${i}" value="${escapeHtml(m.label)}"></div>`).join('');}function saveMoodConfig(){moods=moods.map((m,i)=>({emoji:(document.getElementById(`mood-emoji-${i}`)&&document.getElementById(`mood-emoji-${i}`).value)||m.emoji,label:(document.getElementById(`mood-label-${i}`)&&document.getElementById(`mood-label-${i}`).value)||m.label}));saveMoodConfigData();renderMoodSelector();toggleMoodConfig();alert('✅ Configuration saved');}
-
-    function saveEntry(){const noteEl=document.getElementById('note-input');const note=noteEl?noteEl.value.trim():'';if(!note){alert('Please write a note');return;}const moodData=selectedMood!==null?moods[selectedMood]:null;if(editingEntryId){const entryIndex=entries.findIndex(e=>e.id===editingEntryId);if(entryIndex!==-1){entries[entryIndex]={...entries[entryIndex],note,location:(document.getElementById('location-input')&&document.getElementById('location-input').value)||'',weather:(document.getElementById('weather-input')&&document.getElementById('weather-input').value)||'',images:[...currentImages],audio:currentAudio,coords:currentCoords?{...currentCoords}:entries[entryIndex].coords,mood:moodData};}}else{const entry={id:Date.now(),timestamp:new Date().toISOString(),note,location:(document.getElementById('location-input')&&document.getElementById('location-input').value)||'',weather:(document.getElementById('weather-input')&&document.getElementById('weather-input').value)||'',images:[...currentImages],audio:currentAudio,coords:currentCoords?{...currentCoords}:null,mood:moodData};entries.unshift(entry);}saveData();renderTimeline();toggleForm();}
-    function editEntry(id){const entry=entries.find(e=>e.id===id);if(!entry)return;editingEntryId=id;const noteEl=document.getElementById('note-input');if(noteEl)noteEl.value=entry.note||'';const locEl=document.getElementById('location-input');if(locEl)locEl.value=entry.location||'';const weatherEl=document.getElementById('weather-input');if(weatherEl)weatherEl.value=entry.weather||'';currentImages=[...(entry.images||[])];currentAudio=entry.audio||null;currentCoords=entry.coords?{...entry.coords}:null;const moodIndex=entry.mood?moods.findIndex(m=>m.emoji===entry.mood.emoji&&m.label===entry.mood.label):-1;selectedMood=moodIndex!==-1?moodIndex:null;renderImagePreviews();renderAudioPreview();renderMoodSelector();if(entry.coords)showMiniMap(entry.coords.lat,entry.coords.lon,'form-map');const delBtn=document.getElementById('delete-btn');if(delBtn)delBtn.classList.remove('hidden');const saveBtn=document.getElementById('save-btn');if(saveBtn)saveBtn.textContent='💾 Update';const formWindow=document.getElementById('form-window');if(formWindow){formWindow.classList.remove('hidden');formWindow.scrollIntoView({behavior:'smooth',block:'start'});} }
-    function deleteCurrentEntry(){if(!editingEntryId)return;if(confirm('Delete this entry?')){entries=entries.filter(e=>e.id!==editingEntryId);if(currentUser&&!isOfflineMode&&db){db.collection('users').doc(currentUser.uid).collection('entries').doc(String(editingEntryId)).delete().catch(console.error);}saveData();renderTimeline();toggleForm();}}
-
-    function previewEntry(id){const entry=entries.find(e=>e.id===id);if(!entry)return;const modal=document.getElementById('preview-modal');const body=document.getElementById('preview-body');if(!modal||!body)return;let html=`<div style="margin-bottom:16px"><strong>Time:</strong> ${escapeHtml(formatDate(entry.timestamp))} at ${escapeHtml(formatTime(entry.timestamp))}</div>${entry.mood?`<div style="margin-bottom:16px"><strong>Mood:</strong> <span style="font-size:24px">${escapeHtml(entry.mood.emoji)}</span> ${escapeHtml(entry.mood.label)}</div>`:''}<div style="margin-bottom:16px"><strong>Note:</strong><div style="margin-top:8px;line-height:1.6">${escapeHtml(entry.note).replace(/\n/g,'<br>')}</div></div>${entry.location?`<div style="margin-bottom:16px"><strong>Location:</strong> ${escapeHtml(entry.location)}</div>`:''}${entry.weather?`<div style="margin-bottom:16px"><strong>Weather:</strong> ${escapeHtml(entry.weather)}</div>`:''}${entry.coords?`<div style="margin-bottom:16px"><strong>Map:</strong><div class="preview-map-full" id="preview-map-modal"></div></div>`:''}${entry.audio?`<div style="margin-bottom:16px"><strong>Audio:</strong><audio controls style="width:100%;margin-top:8px"><source src="${entry.audio}" type="audio/webm"></audio></div>`:''}${entry.images&&entry.images.length>0?`<div style="margin-bottom:16px"><strong>Images:</strong><div class="preview-images-full">${entry.images.map(img=>`<img src="${img}" style="max-width:120px;margin-right:8px" onclick="window.open('${img}')">`).join('')}</div></div>`:''}`;body.innerHTML=html;modal.classList.add('show');if(entry.coords)setTimeout(()=>createLeafletMap('preview-map-modal',entry.coords.lat,entry.coords.lon,13),150);}function closePreview(e){if(e&&e.target.id!=='preview-modal')return;const modal=document.getElementById('preview-modal');if(!modal)return;modal.classList.remove('show');const body=document.getElementById('preview-body');if(body)body.innerHTML='';removeLeafletMap('preview-map-modal');}
-
-    function formatDate(ts){const d=new Date(ts);return d.toLocaleDateString('en',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}function formatTime(ts){const d=new Date(ts);return d.toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'});}function getDayKey(ts){const d=new Date(ts);return d.toISOString().split('T')[0];}function toggleDay(dayKey){const content=document.getElementById(`day-content-${dayKey}`);const chevron=document.getElementById(`chevron-${dayKey}`);if(content)content.classList.toggle('expanded');if(chevron)chevron.classList.toggle('expanded');}
-
-    function renderTimeline(){const container=document.getElementById('timeline-container');const emptyState=document.getElementById('empty-state');const footer=document.getElementById('footer');if(!container)return; if(entries.length===0){container.innerHTML='';if(emptyState)emptyState.classList.remove('hidden');if(footer)footer.style.display='none';return;}if(emptyState)emptyState.classList.add('hidden');if(footer)footer.style.display='flex';const groupedByDay={};entries.forEach(entry=>{const dayKey=getDayKey(entry.timestamp);if(!groupedByDay[dayKey])groupedByDay[dayKey]=[];groupedByDay[dayKey].push(entry);});const dayKeys=Object.keys(groupedByDay).sort((a,b)=>b.localeCompare(a));const html=`<div class="timeline"><div class="timeline-line"></div>${dayKeys.map(dayKey=>{const dayEntries=groupedByDay[dayKey];const firstEntry=dayEntries[0];return `<div class="day-block"><div class="day-header" onclick="toggleDay('${dayKey}')"><span>${escapeHtml(formatDate(firstEntry.timestamp))}</span><span class="chevron" id="chevron-${dayKey}">▼</span></div><div class="day-content" id="day-content-${dayKey}">${dayEntries.map(entry=>{const heightStyle=entry.isTimedActivity&&entry.duration?`min-height:${Math.min(150+entry.duration*0.5,300)}px;` : '';const trackClass=entry.isQuickTrack?'track-event':'';const safeNote=escapeHtml(entry.note||'').replace(/\n/g,'<br>');return `<div class="breadcrumb-entry ${entry.isTimedActivity||entry.isSpent?'edit-mode':''} ${trackClass}" style="${heightStyle}"><button onclick="editEntry(${entry.id})">✏️ Edit</button><button onclick="previewEntry(${entry.id})">🔍 Preview</button><div class="breadcrumb-time">⏰ ${escapeHtml(formatTime(entry.timestamp))} ${entry.isSpent?`<span class="spent-badge">💰 €${escapeHtml(String(entry.spentAmount.toFixed(2)))}</span>`:''}</div><div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:8px">${entry.mood?`<span class="mood-display">${escapeHtml(entry.mood.emoji)}</span>`:''}<div style="flex:1"><div id="note-${entry.id}">${safeNote}</div>${(entry.note&&entry.note.length>150)?`<button id="read-more-${entry.id}" onclick="toggleReadMore(${entry.id})">Read more</button>`:''}</div></div>${entry.weather||entry.location?`<div style="font-size:12px;color:${entry.isQuickTrack?'#ccc':'#666'};margin-bottom:8px">${entry.weather?escapeHtml(entry.weather):''} ${entry.location?` • 📍 ${escapeHtml(entry.location)}`:''}</div>`:''}${entry.audio?`<div style="margin-top:12px;margin-bottom:12px"><audio controls style="width:100%;max-width:300px"><source src="${entry.audio}" type="audio/webm"></audio></div>`:''}<div class="breadcrumb-preview">${entry.images&&entry.images.length>0?entry.images.map(img=>`<img src="${img}" style="max-width:90px;margin-right:6px" onclick="window.open('${img}')">`).join(''):''}${entry.coords?`<div class="preview-map-thumb" onclick="previewEntry(${entry.id})" style="display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px">🗺️</div>`:''}</div></div>`}).join('')}</div></div>`}).join('')}</div>`;container.innerHTML=html;}
-
-    function toggleReadMore(id){const noteEl=document.getElementById(`note-${id}`);const btnEl=document.getElementById(`read-more-${id}`);if(!noteEl||!btnEl)return;if(noteEl.classList.contains('expanded')){noteEl.classList.remove('expanded');btnEl.textContent='Read more';}else{noteEl.classList.add('expanded');btnEl.textContent='Show less';}}
-
-    function updateTimerOptions(){const container=document.getElementById('duration-selector');if(!container)return;container.innerHTML=timeDurations.map(duration=>`<div class="duration-option" data-duration="${duration}" onclick="selectDurationFromElement(event)">${duration<60?duration+' min':(duration/60)+' hour'+(duration>60?'s':'')}</div>`).join('');const actContainer=document.getElementById('activity-selector');if(!actContainer)return;actContainer.innerHTML=timeActivities.map(activity=>`<div class="activity-option" onclick="selectActivity('${escapeHtml(activity)}');event.stopPropagation();">${escapeHtml(activity)}</div>`).join('');}
-    function selectDurationFromElement(e){e.stopPropagation();const el=e.currentTarget||e.target;const minutes=parseInt(el.dataset.duration,10);selectedDuration=minutes;document.querySelectorAll('.duration-option').forEach(x=>x.classList.remove('selected'));el.classList.add('selected');checkTimerReady();}
-    function selectActivity(activity){selectedActivity=activity;document.querySelectorAll('.activity-option').forEach(el=>el.classList.remove('selected'));document.querySelectorAll('.activity-option').forEach(el=>{if(el.textContent.includes(activity))el.classList.add('selected');});checkTimerReady();}
-    function checkTimerReady(){const createBtn=document.getElementById('create-time-btn');if(createBtn)createBtn.disabled=!(selectedDuration&&selectedActivity);}function createTimeEvent(){if(!selectedDuration||!selectedActivity)return;const entry={id:Date.now(),timestamp:new Date().toISOString(),note:`${selectedActivity} - ${selectedDuration} minutes`,location:'',weather:'',images:[],audio:null,coords:null,mood:null,activity:selectedActivity,duration:selectedDuration,isTimedActivity:true};entries.unshift(entry);saveData();renderTimeline();alert('✅ Time event created!');toggleTimer();}
-    function resetTimerSelections(){selectedDuration=null;selectedActivity=null;document.querySelectorAll('.duration-option').forEach(el=>el.classList.remove('selected'));document.querySelectorAll('.activity-option').forEach(el=>el.classList.remove('selected'));const btn=document.getElementById('create-time-btn');if(btn)btn.disabled=true;}
-    function quickTrack(activity){const entry={id:Date.now(),timestamp:new Date().toISOString(),note:activity,location:'',weather:'',images:[],audio:null,coords:null,mood:null,isQuickTrack:true};entries.unshift(entry);saveData();renderTimeline();toggleTrack();alert(`✅ Tracked: ${activity}`);}function saveSpent(){const descEl=document.getElementById('spent-description');const amountEl=document.getElementById('spent-amount');const description=descEl?descEl.value.trim():'';const amount=amountEl?parseFloat(amountEl.value):NaN;if(!description){alert('Please enter a description');return;}if(!amount||amount<=0){alert('Please enter a valid amount');return;}const entry={id:Date.now(),timestamp:new Date().toISOString(),note:description,location:'',weather:'',images:[],audio:null,coords:null,mood:null,spentAmount:amount,isSpent:true};entries.unshift(entry);saveData();renderTimeline();toggleSpent();alert(`✅ Spent tracked: €${amount.toFixed(2)}`);}
-
-    // --- FIX: updateTrackOptions implementation ---
-    function updateTrackOptions(){const mealsContainer=document.getElementById('track-meals');const tasksContainer=document.getElementById('track-tasks');const fallback=document.getElementById('track-container');if(!mealsContainer&&!tasksContainer&&!fallback)return;if(mealsContainer){mealsContainer.innerHTML=trackItems.meals.map(m=>`<button class="track-btn" onclick="quickTrack('${escapeHtml(m)}')">${escapeHtml(m)}</button>`).join(' ');}if(tasksContainer){tasksContainer.innerHTML=trackItems.tasks.map(t=>`<button class="track-btn" onclick="quickTrack('${escapeHtml(t)}')">${escapeHtml(t)}</button>`).join(' ');}if(fallback){fallback.innerHTML=`<div style="margin-bottom:8px"><strong>Meals</strong><div>${trackItems.meals.map(m=>`<button class=\"track-btn\" onclick=\"quickTrack('${escapeHtml(m)}')\">${escapeHtml(m)}</button>`).join('')}</div></div><div style="margin-bottom:8px"><strong>Tasks</strong><div>${trackItems.tasks.map(t=>`<button class=\"track-btn\" onclick=\"quickTrack('${escapeHtml(t)}')\">${escapeHtml(t)}</button>`).join('')}</div></div>`;}}
-
-    function toggleForm(){const el=document.getElementById('form-window');if(!el)return;el.classList.toggle('hidden');if(el.classList.contains('hidden')){editingEntryId=null;const saveBtn=document.getElementById('save-btn');if(saveBtn)saveBtn.textContent='💾 Save';const delBtn=document.getElementById('delete-btn');if(delBtn)delBtn.classList.add('hidden');}}
-    function toggleTimer(){const el=document.getElementById('timer-window');if(!el)return;el.classList.toggle('hidden');if(!el.classList.contains('hidden')){resetTimerSelections();} }
-    function toggleTrack(){const el=document.getElementById('track-window');if(!el)return;el.classList.toggle('hidden');}
-    function toggleSpent(){const el=document.getElementById('spent-window');if(!el)return;el.classList.toggle('hidden');}
-
-    function exportCSV(){const headers=['Date and Time','Note','Activity','Duration (min)','Location','Weather','Mood','Spent','Images'];const rows=entries.map(e=>[new Date(e.timestamp).toLocaleString(),e.note,e.activity||'',e.duration||'',e.location||'',e.weather||'',e.mood?`${e.mood.emoji} ${e.mood.label}`:'',e.spentAmount?`€${e.spentAmount}`:'',e.images?e.images.length:0]);const csv=[headers,...rows].map(row=>row.map(cell=>`"${String(cell).replace(/"/g,'""')}"`).join(',')).join('\n');const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`breadcrumbs-${Date.now()}.csv`;a.click();}
-    function exportICS(){const icsEvents=entries.map(e=>{const date=new Date(e.timestamp);const dateStr=date.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';return `BEGIN:VEVENT\nUID:${e.id}@breadcrumbs\nDTSTAMP:${dateStr}\nDTSTART:${dateStr}\nSUMMARY:${escapeHtml(e.note).substring(0,50)}\nDESCRIPTION:${escapeHtml(e.note)}\nLOCATION:${escapeHtml(e.location||'')}\nEND:VEVENT`;}).join('\n');const ics=`BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Breadcrumbs Timeline//ES\n${icsEvents}\nEND:VCALENDAR`;const blob=new Blob([ics],{type:'text/calendar'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`breadcrumbs-${Date.now()}.ics`;a.click();}
-
-    // --- Bind UI events ---
-    document.getElementById('sign-in-btn')?.addEventListener('click',signInWithGoogle);
-    document.getElementById('continue-offline-btn')?.addEventListener('click',continueOffline);
-    document.getElementById('add-entry-btn')?.addEventListener('click',toggleForm);
-    document.getElementById('save-btn')?.addEventListener('click',saveEntry);
-    document.getElementById('cancel-btn')?.addEventListener('click',toggleForm);
-    document.getElementById('delete-btn')?.addEventListener('click',deleteCurrentEntry);
-    document.getElementById('gps-btn')?.addEventListener('click',getGPS);
-    document.getElementById('image-input')?.addEventListener('change',handleImages);
-    document.getElementById('record-btn')?.addEventListener('click',startRecording);
-    document.getElementById('stop-record-btn')?.addEventListener('click',stopRecording);
-    document.getElementById('mood-config-toggle')?.addEventListener('click',toggleMoodConfig);
-    document.getElementById('save-mood')?.addEventListener('click',saveMoodConfig);
-    document.getElementById('time-btn')?.addEventListener('click',toggleTimer);
-    document.getElementById('track-btn')?.addEventListener('click',toggleTrack);
-    document.getElementById('spent-btn')?.addEventListener('click',toggleSpent);
-    document.getElementById('create-time-btn')?.addEventListener('click',createTimeEvent);
-    document.getElementById('close-timer')?.addEventListener('click',toggleTimer);
-    document.getElementById('save-spent')?.addEventListener('click',saveSpent);
-    document.getElementById('close-spent')?.addEventListener('click',toggleSpent);
-    document.getElementById('export-csv')?.addEventListener('click',exportCSV);
-    document.getElementById('export-ics')?.addEventListener('click',exportICS);
-    document.getElementById('preview-modal')?.addEventListener('click',closePreview);
-
-    document.getElementById('track-meals')?.addEventListener('click',()=>{});
-
-    // initial boot
-    loadSettings();loadMoodConfig();loadData();updateTimerOptions();try{updateTrackOptions();}catch(e){console.warn('updateTrackOptions failed',e);}renderMoodSelector();
-
-    // Small test data so user sees something immediately
-    if(entries.length===0){entries.unshift({id:1,timestamp:new Date().toISOString(),note:'Welcome to Breadcrumbs — this is a demo entry',location:'Madrid',weather:'☀️ clear, 20°C',images:[],audio:null,coords:null,mood:moods[0]});saveData();renderTimeline();}
-
-    // --- End JS ---
-  </script>
+  <!-- JS -->
+  <script src="script.js"></script>
 </body>
 </html>
