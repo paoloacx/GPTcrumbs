@@ -1,176 +1,167 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Breadcrumbs Timeline</title>
 
-  <!-- Main stylesheet -->
+  <!-- Styles -->
   <link rel="stylesheet" href="style.css" />
 
-  <!-- Leaflet for maps -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-sA+e2atCf0fZp4wK0qWQJ0p+1NPMhUQkk+f5QkM7N0k="
-    crossorigin=""
-  />
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-o9N1j9LFb7R2D0JXWm0A6YqQK/G6lH3sZtO6zY1C6s8="
-    crossorigin=""
-  ></script>
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <!-- Icons -->
-  <link rel="icon" href="assets/icon.png" />
-
+  <!-- Firebase (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 </head>
 <body>
-  <!-- LOGIN / OFFLINE SCREEN -->
-  <section id="login-screen" class="centered">
+  <!-- AUTH / OFFLINE -->
+  <div id="auth-container" class="card centered">
     <h2>Offline Breadcrumbs Timeline</h2>
-    <p>Sign in to sync your data</p>
-    <button id="login-google">🔐 Sign in with Google</button>
-    <p>Or continue without account<br />(data saved locally only)</p>
-    <button id="continue-offline">Continue Offline</button>
-  </section>
+    <div class="small">Sign in to sync your data</div>
+    <div style="margin-top:12px">
+      <button id="sign-in-google" class="btn">🔐 Sign in with Google</button>
+    </div>
+    <div style="margin-top:8px;">Or continue without account<br/><span class="muted">(data saved locally only)</span></div>
+    <div style="margin-top:12px">
+      <button id="continue-offline" class="btn neutral">Continue Offline</button>
+    </div>
+  </div>
 
   <!-- MAIN APP -->
-  <section id="app-screen" class="hidden">
-    <header class="top-bar">
+  <div id="main-app" class="hidden">
+    <header class="topbar">
       <div class="left">
-        <button id="signout-btn" class="danger">🚪 Sign Out</button>
+        <button id="sign-out" class="btn danger">🚪 Sign Out</button>
       </div>
       <div class="right">
-        <button id="add-breadcrumb">➕ Breadcrumb</button>
-        <button id="time-btn">⏱️ Time</button>
-        <button id="track-btn">📊 Track</button>
-        <button id="spent-btn">💰 Spent</button>
+        <button id="add-breadcrumb" class="btn">➕ Breadcrumb</button>
+        <button id="time-btn" class="btn">⏱️ Time</button>
+        <button id="track-btn" class="btn">📊 Track</button>
+        <button id="spent-btn" class="btn">💰 Spent</button>
       </div>
     </header>
 
-    <!-- MAIN CONTENT -->
-    <main>
-      <div id="timeline">
-        <p class="no-entries">📍 No entries yet<br />Create your first breadcrumb</p>
-      </div>
+    <main class="container">
+      <section id="controls" class="controls">
+        <!-- small status -->
+        <div id="sync-status" class="status">● Offline</div>
+        <div id="user-email-short" class="user-short"></div>
+      </section>
+
+      <section id="timeline-container" class="timeline">
+        <div id="empty-state" class="empty">
+          <div class="big">📍</div>
+          <div class="lead">No entries yet</div>
+          <div>Create your first breadcrumb</div>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <button id="save-settings" class="btn neutral">💾 Save Settings</button>
+        <button id="export-csv" class="btn neutral">💾 Export CSV</button>
+        <button id="export-ical" class="btn neutral">📅 Export iCal</button>
+        <button id="open-settings" class="btn neutral">⚙️ Settings</button>
+      </footer>
     </main>
+  </div>
 
-    <!-- SETTINGS FOOTER -->
-    <footer>
-      <button id="save-settings">💾 Save Settings</button>
-      <button id="export-csv">💾 Export CSV</button>
-      <button id="export-ical">📅 Export iCal</button>
-      <button id="open-settings">⚙️ Settings</button>
-    </footer>
-  </section>
+  <!-- FORM MODAL (Breadcrumb) -->
+  <div id="form-window" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>New Entry</h3>
+        <div class="modal-actions">
+          <button id="save-btn" class="btn">💾 Save</button>
+          <button id="delete-btn" class="btn danger hidden">🗑️ Delete</button>
+          <button id="cancel-btn" class="btn neutral">Cancel</button>
+        </div>
+      </div>
 
-  <!-- MODAL: BREADCRUMB FORM -->
-  <div id="form-modal" class="modal hidden">
-    <div class="modal-content">
-      <h3>New Entry</h3>
+      <div class="modal-body">
+        <label>Mood: <button id="mood-config-toggle" class="btn small">⚙️</button></label>
+        <div id="mood-selector" class="mood-selector"></div>
+        <div id="mood-config" class="mood-config hidden">
+          <div id="mood-config-list"></div>
+          <button id="save-mood" class="btn small">Save Configuration</button>
+        </div>
 
-      <label>Mood:</label>
-      <select id="mood-select">
-        <option value="😊">😊</option>
-        <option value="😐">😐</option>
-        <option value="😞">😞</option>
-      </select>
-      <button id="config-mood">⚙️</button>
+        <label>Note:</label>
+        <textarea id="note-input" rows="4"></textarea>
 
-      <label>Note:</label>
-      <textarea id="note-input" rows="3" placeholder="Write a note..."></textarea>
+        <label>Location:</label>
+        <div class="inline">
+          <input id="location-input" type="text" />
+          <button id="gps-btn" class="btn small">🌍 Use GPS</button>
+        </div>
 
-      <label>Location:</label>
-      <input type="text" id="location-input" placeholder="Enter location" />
-      <button id="use-gps">🌍 Use GPS</button>
+        <label>Weather:</label>
+        <input id="weather-input" type="text" />
 
-      <label>Weather:</label>
-      <input type="text" id="weather-input" placeholder="e.g. Sunny" />
+        <label>Images:</label>
+        <input id="image-input" type="file" multiple accept="image/*" />
+        <div id="image-previews" class="image-previews"></div>
 
-      <label>Images:</label>
-      <input type="file" id="image-input" multiple accept="image/*" />
-
-      <div class="buttons">
-        <button id="save-entry">💾 Save</button>
-        <button id="cancel-entry">Cancel</button>
+        <label>Audio:</label>
+        <div class="audio-controls">
+          <button id="record-btn" class="btn small">🔴 Record</button>
+          <button id="stop-record-btn" class="btn small" disabled>⏹️ Stop</button>
+          <div id="audio-preview"></div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- MODAL: TIME TRACKER -->
-  <div id="time-modal" class="modal hidden">
-    <div class="modal-content">
-      <h3>Time Event</h3>
-      <label>Duration:</label>
-      <div id="duration-options">
-        <button data-min="15">15 min</button>
-        <button data-min="30">30 min</button>
-        <button data-min="60">1 hour</button>
-        <button data-min="120">2 hours</button>
-        <button data-min="180">3 hours</button>
+  <!-- TIME MODAL -->
+  <div id="timer-window" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Time Event</h3>
+        <div class="modal-actions">
+          <button id="create-time-btn" class="btn" disabled>Create Event</button>
+          <button id="close-timer" class="btn neutral">Close</button>
+        </div>
       </div>
-
-      <label>Activity:</label>
-      <div id="activity-options">
-        <button>📚 Reading</button>
-        <button>🏃 Sports</button>
-        <button>💼 Work</button>
-        <button>🧹 Cleaning</button>
-        <button>🛒 Errands</button>
-      </div>
-
-      <div class="buttons">
-        <button id="create-time-event">Create Event</button>
-        <button id="cancel-time-event">Cancel</button>
+      <div class="modal-body">
+        <div class="grid" id="duration-selector"></div>
+        <div class="grid" id="activity-selector"></div>
       </div>
     </div>
   </div>
 
-  <!-- MODAL: QUICK TRACK -->
-  <div id="track-modal" class="modal hidden">
-    <div class="modal-content">
-      <h3>Quick Track</h3>
+  <!-- TRACK MODAL -->
+  <div id="track-window" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-header"><h3>Quick Track</h3><div class="modal-actions"><button id="close-track" class="btn neutral">Close</button></div></div>
+      <div class="modal-body" id="track-container"></div>
+    </div>
+  </div>
 
-      <div id="meals">
-        <p>Meals:</p>
-        <button>🍳 Breakfast</button>
-        <button>🥗 Lunch</button>
-        <button>🍽️ Dinner</button>
-        <button>☕ Snack</button>
-      </div>
-
-      <div id="tasks">
-        <p>Tasks:</p>
-        <button>💊 Medicine</button>
-        <button>💧 Water</button>
-        <button>🚶 Walk</button>
-        <button>📞 Call</button>
-      </div>
-
-      <div class="buttons">
-        <button id="close-track">Close</button>
+  <!-- SPENT MODAL -->
+  <div id="spent-window" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-header"><h3>Spent</h3><div class="modal-actions"><button id="save-spent" class="btn">Save</button><button id="close-spent" class="btn neutral">Close</button></div></div>
+      <div class="modal-body">
+        <label>Description:</label>
+        <input id="spent-description" type="text" />
+        <label>Amount (€):</label>
+        <input id="spent-amount" type="number" step="0.01" min="0" />
       </div>
     </div>
   </div>
 
-  <!-- MODAL: SPENT -->
-  <div id="spent-modal" class="modal hidden">
-    <div class="modal-content">
-      <h3>Spent</h3>
-      <label>Description:</label>
-      <input type="text" id="spent-desc" placeholder="What did you spend on?" />
-      <label>Amount (€):</label>
-      <input type="number" id="spent-amount" step="0.01" min="0" />
-
-      <div class="buttons">
-        <button id="save-spent">💾 Save</button>
-        <button id="cancel-spent">Cancel</button>
-      </div>
+  <!-- PREVIEW MODAL -->
+  <div id="preview-modal" class="modal hidden">
+    <div class="modal-card">
+      <div id="preview-body"></div>
     </div>
   </div>
 
-  <!-- JS -->
+  <!-- SCRIPT -->
   <script src="script.js"></script>
 </body>
 </html>
