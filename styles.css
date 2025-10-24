@@ -295,7 +295,7 @@ h1 {
     background: #333;
 }
 
-/* ANIMACIÃ“N PANEL DESPLEGABLE */
+/* ANIMACIÓN PANEL DESPLEGABLE */
 .day-content {
     max-height: 0;
     overflow: hidden;
@@ -323,7 +323,7 @@ h1 {
     padding: 16px !important;
 }
 
-/* ANIMACIÃ“N CHEVRON */
+/* ANIMACIÓN CHEVRON */
 .chevron {
     display: inline-block;
     transition: transform 0.3s ease;
@@ -467,7 +467,7 @@ h1 {
     font-size: 11px;
 }
 
-/* ANIMACIÃ“N MODAL (pop-in suave) */
+/* ANIMACIÓN MODAL (pop-in suave) */
 .preview-modal {
     display: none;
     position: fixed;
@@ -576,7 +576,7 @@ h1 {
     right: 0 !important;
     background: #000;
     color: white;
-    padding: 8px 12px;
+    padding: 10px 12px;
     border-top: 3px solid #666;
     display: flex;
     justify-content: center;
@@ -588,21 +588,10 @@ h1 {
 }
 
 .footer .mac-button {
-    margin: 0 2px;
+    margin: 0;
     font-size: 10px;
-    padding: 4px 8px;
+    padding: 5px 8px;
     min-width: fit-content;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-}
-
-.footer .mac-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 3px 3px 0 rgba(255,255,255,0.2);
-}
-
-.footer .mac-button:active {
-    transform: scale(0.95);
 }
 
 @media (max-width: 768px) {
@@ -859,23 +848,11 @@ h1 {
     color: #000 !important;
     margin-top: 24px !important;
     padding: 14px !important;
-    max-height: 4.8em;
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    transition: all 0.3s ease;
     border: 2px solid #cc9900 !important;
     border-radius: 4px !important;
     line-height: 1.6 !important;
     background: #fffacd !important;
-}
-
-.optional-note.expanded {
-    max-height: none !important;
-    display: block;
-    -webkit-line-clamp: unset;
-    animation: slideDown 0.3s ease;
+    display: block !important;
 }
 
 .breadcrumb-entry.track-event .optional-note {
@@ -897,32 +874,6 @@ h1 {
 }
 
 /* ANIMACIONES PARA TODOS LOS MODALES Y FORMULARIOS */
-
-/* Formularios de creación (form, timer, track, spent, recap) */
-#form-window,
-#timer-window,
-#track-window,
-#spent-window,
-#recap-form {
-    max-height: 0;
-    overflow: hidden;
-    opacity: 0;
-    transform: translateY(-6px);
-    transition:
-        max-height 0.45s ease,
-        opacity 0.4s ease,
-        transform 0.4s ease;
-}
-
-#form-window:not(.hidden),
-#timer-window:not(.hidden),
-#track-window:not(.hidden),
-#spent-window:not(.hidden),
-#recap-form:not(.hidden) {
-    max-height: 3000px;
-    opacity: 1;
-    transform: translateY(0);
-}
 
 /* Stats panel */
 #stats-panel {
@@ -978,8 +929,40 @@ h1 {
     transform: translateY(0);
 }
 
+/* Formularios de creación (Crumb, Time, Track, Spent) */
+#crumb-form,
+#time-form,
+#track-form,
+#spent-form {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition:
+        max-height 0.45s ease,
+        opacity 0.4s ease,
+        transform 0.4s ease;
+}
 
-/* AnimaciÃ³n para mood selector */
+#crumb-form:not(.hidden),
+#time-form:not(.hidden),
+#track-form:not(.hidden),
+#spent-form:not(.hidden) {
+    max-height: 3000px;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Animación suave para botones del footer */
+.footer .mac-button {
+    transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.footer .mac-button:active {
+    transform: scale(0.95);
+}
+
+/* Animación para mood selector */
 .mood-option {
     transition: all 0.2s cubic-bezier(.18,.89,.32,1.28);
 }
@@ -988,7 +971,7 @@ h1 {
     transform: scale(0.9);
 }
 
-/* AnimaciÃ³n para activity/duration selectors */
+/* Animación para activity/duration selectors */
 .duration-option,
 .activity-option {
     transition: all 0.2s cubic-bezier(.18,.89,.32,1.28);
@@ -999,7 +982,7 @@ h1 {
     transform: scale(0.95);
 }
 
-/* AnimaciÃ³n para image preview */
+/* Animación para image preview */
 .preview-image-thumb,
 .preview-map-thumb {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -1016,7 +999,7 @@ h1 {
     transform: scale(0.98);
 }
 
-/* AnimaciÃ³n para edit button */
+/* Animación para edit button */
 .edit-button {
     transition: all 0.15s ease;
 }
@@ -1030,7 +1013,7 @@ h1 {
     transform: scale(0.95);
 }
 
-/* AnimaciÃ³n para read more button */
+/* Animación para read more button */
 .read-more-btn {
     transition: all 0.2s ease;
     padding: 4px 8px;
@@ -1064,81 +1047,8 @@ h1 {
 
 /* ===== RECAP STYLES ===== */
 
-.day-recap {
-    background: white;
-    background-image: 
-        repeating-linear-gradient(0deg, transparent, transparent 1px, #333 1px, #333 2px),
-        repeating-linear-gradient(90deg, transparent, transparent 1px, #333 1px, #333 2px);
-    background-size: 2px 2px;
-    box-shadow: 5px 5px 0 rgba(0,0,0,0.3);
-    margin: 0 0 16px 0;
-}
-
-.recap-header {
-    background: #f0f0f0;
-    color: #000;
-    padding: 12px 16px;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 12px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 16px;
-    transition: background 0.2s ease;
-    border-bottom: 2px solid #ccc;
-}
-
-.recap-header:hover {
-    background: #e8e8e8;
-}
-
-.recap-chevron {
-    font-size: 14px;
-    transition: transform 0.3s ease;
-    order: -1; /* Esto mueve el chevron al principio */
-}
-
-.recap-chevron.expanded {
-    transform: rotate(180deg);
-}
-
-.recap-content {
-    padding: 16px;
-    background: white;
-    transition: all 0.3s ease;
-}
-
-.recap-content.hidden {
-    display: none;
-}
-
-.recap-rating {
-    font-size: 20px;
-    margin-bottom: 12px;
-}
-
-.recap-section {
-    margin-bottom: 16px;
-    padding: 12px;
-    background: #fafafa;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-}
-
-.recap-section strong {
-    color: #000;
-    font-size: 14px;
-}
-
-.recap-section ul {
-    margin: 8px 0 0 20px;
-    padding: 0;
-}
-
-.recap-section li {
-    margin: 4px 0;
-    font-size: 13px;
+.recap-entry {
+    box-shadow: 5px 5px 0 rgba(0,0,0,0.3) !important;
 }
 
 /* Slider estilo Mac retro */
@@ -1200,105 +1110,17 @@ input[type="range"]:active::-moz-range-thumb {
     }
     
     .footer .mac-button {
-        font-size: 9px;
-        padding: 4px 6px;
-        margin: 0 1px;
+        font-size: 10px;
+        padding: 8px;
+        flex: 0 1 calc(33.33% - 6px);
+        min-width: 0;
+        white-space: nowrap;
     }
 }
 
 @media (max-width: 480px) {
     .footer .mac-button {
-        font-size: 8px;
-        padding: 3px 5px;
+        font-size: 9px;
+        padding: 6px;
     }
-}
-
-/* ===== FAB BUTTONS ===== */
-
-.fab-container {
-    position: fixed;
-    bottom: 80px;
-    right: 20px;
-    z-index: 9998;
-    display: flex;
-    flex-direction: column-reverse;
-    gap: 12px;
-    align-items: center;
-}
-
-.fab {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    border: 3px solid #000;
-    background: #fff;
-    box-shadow: 4px 4px 0 rgba(0,0,0,0.3);
-    cursor: pointer;
-    font-size: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-    position: relative;
-}
-
-.fab:hover {
-    transform: scale(1.05);
-    box-shadow: 5px 5px 0 rgba(0,0,0,0.4);
-}
-
-.fab:active {
-    transform: scale(0.95);
-    box-shadow: 3px 3px 0 rgba(0,0,0,0.3);
-}
-
-.fab-main {
-    background: #000;
-    color: white;
-    font-size: 32px;
-    font-weight: bold;
-    width: 64px;
-    height: 64px;
-}
-
-.fab-main:hover {
-    transform: scale(1.05);
-    box-shadow: 5px 5px 0 rgba(0,0,0,0.5);
-}
-
-.fab-action {
-    width: 48px;
-    height: 48px;
-    font-size: 20px;
-    opacity: 0;
-    transform: scale(0) translateY(20px);
-    pointer-events: none;
-}
-
-.fab-action.show {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-    pointer-events: all;
-}
-
-@media (max-width: 768px) {
-    .fab-container {
-        right: 16px;
-        bottom: 70px;
-    }
-    
-    .fab-main {
-        width: 56px;
-        height: 56px;
-    }
-    
-    .fab-action {
-        width: 44px;
-        height: 44px;
-    }
-}
-
-#fab-icon {
-    transition: transform 0.3s ease;
-    display: inline-block;
 }
