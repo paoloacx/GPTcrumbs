@@ -542,6 +542,11 @@ function editEntry(id) {
     const entry = entries.find(e => e.id === id);
     if (!entry) return;
 
+    if (entry.type === 'recap') {
+        editRecapEvent(entry);
+        return;
+    }
+
     if (entry.isTimedActivity) {
         editTimeEvent(entry);
         return;
@@ -1341,14 +1346,54 @@ function renderTimeline() {
                 const dayEntries = groupedByDay[dayKey];
                 const firstEntry = dayEntries[0];
                 
+                // Separar recaps del resto de entries
+                const recaps = dayEntries.filter(e => e.type === 'recap');
+                const normalEntries = dayEntries.filter(e => e.type !== 'recap');
+                
                 return `
                     <div class="day-block">
                         <div class="day-header" onclick="toggleDay('${dayKey}')">
                             <span>${formatDate(firstEntry.timestamp)}</span>
                             <span class="chevron" id="chevron-${dayKey}">▼</span>
                         </div>
+                        
+                        ${recaps.map(recap => `
+                            <div class="day-recap" id="recap-${recap.id}">
+                                <div class="recap-header" onclick="toggleRecapView(${recap.id})">
+                                    <span>🌟 Day Recap</span>
+                                    <span class="recap-chevron" id="recap-chevron-${recap.id}">▼</span>
+                                </div>
+                                <div class="recap-content hidden" id="recap-content-${recap.id}">
+                                    <div class="recap-rating">Rating: ${'⭐'.repeat(recap.rating)}</div>
+                                    ${recap.reflection ? `<div class="recap-section"><strong>Reflection:</strong><br>${recap.reflection}</div>` : ''}
+                                    ${recap.highlights && recap.highlights.length > 0 ? `
+                                        <div class="recap-section">
+                                            <strong>Highlights:</strong>
+                                            <ul>
+                                                ${recap.highlights.map(h => `<li>${h}</li>`).join('')}
+                                            </ul>
+                                        </div>
+                                    ` : ''}
+                                    ${recap.track ? `
+                                        <div class="recap-section">
+                                            <strong>Soundtrack:</strong><br>
+                                            <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+                                                <img src="${recap.track.artwork}" style="width: 40px; height: 40px; border: 2px solid #000;">
+                                                <div style="flex: 1;">
+                                                    <div style="font-weight: bold; font-size: 12px;">${recap.track.name}</div>
+                                                    <div style="font-size: 11px; color: #666;">${recap.track.artist}</div>
+                                                </div>
+                                                <a href="${recap.track.url}" target="_blank" style="text-decoration: none;">🔗</a>
+                                            </div>
+                                        </div>
+                                    ` : ''}
+                                    <button class="mac-button edit-button" onclick="editEntry(${recap.id})" style="margin-top: 12px;">✏️ Edit</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                        
                         <div class="day-content" id="day-content-${dayKey}">
-                            ${dayEntries.map(entry => {
+                            ${normalEntries.map(entry => {
                                 const heightStyle = entry.isTimedActivity && entry.duration ? `min-height: ${Math.min(150 + entry.duration * 0.5, 300)}px;` : '';
                                 const trackClass = entry.isQuickTrack ? 'track-event' : '';
                                 const spentClass = entry.isSpent ? 'spent-event' : '';
@@ -1380,12 +1425,12 @@ function renderTimeline() {
                                         ${entry.optionalNote.length > 200 ? `<button class="read-more-btn" id="read-more-${entry.id}" onclick="toggleReadMore(${entry.id})">Read more</button>` : ''}
                                     ` : ''}
                                     
-                                    ${!entry.isTimedActivity && !entry.isQuickTrack ? `
+                                    ${!entry.isTimedActivity && !entry.isQuickTrack && !entry.isSpent ? `
                                         <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 8px;">
                                             ${entry.mood ? `<span class="mood-display">${entry.mood.emoji}</span>` : ''}
                                             <div style="flex: 1;">
                                                 <div class="breadcrumb-note" id="note-${entry.id}">${entry.note}</div>
-                                                ${entry.note && entry.note.length > 200 ? `<button class="read-more-btn" id="read-more-${entry.id}" onclick="toggleReadMore(${entry.id})">Read more</button>` : ''}
+                                                ${entry.note && entry.note.length > 150 ? `<button class="read-more-btn" id="read-more-${entry.id}" onclick="toggleReadMore(${entry.id})">Read more</button>` : ''}
                                             </div>
                                         </div>
                                     ` : ''}
@@ -1913,34 +1958,13 @@ function selectTrack(trackName, artistName, url, artwork) {
 function saveRecap() {
     const reflection = document.getElementById('recap-reflection').value.trim();
     const rating = document.getElementById('recap-rating').value;
-    const highlight1 = document.getElementById('recap-highlight-1').value.trim();
+}
+  const highlight1 = document.getElementById('recap-highlight-1').value.trim();
     const highlight2 = document.getElementById('recap-highlight-2').value.trim();
     const highlight3 = document.getElementById('recap-highlight-3').value.trim();
     const selectedTrackJson = document.getElementById('recap-selected-track').value;
     
     if (!reflection && !highlight1 && !highlight2 && !highlight3) {
-        alert('Please add at least one reflection or highlight');
-        return;
-    }
-    
-    const recap = {
-        id: Date.now(),
-        timestamp: new Date().toISOString(),
-        type: 'recap',
-        reflection: reflection,
-        rating: parseInt(rating),
-        highlights: [highlight1, highlight2, highlight3].filter(h => h),
-        track: selectedTrackJson ? JSON.parse(selectedTrackJson) : null
-    };
-    
-    entries.push(recap);
-    saveData();
-    renderTimeline();
-    closeRecapForm();
-    
-    alert('🌟 Recap saved!');
-}
-
 // ===== FAB MENU =====
 
 let fabMenuOpen = false;
@@ -1988,10 +2012,10 @@ window.toggleCrumb = function() {
     if (originalToggleCrumb) originalToggleCrumb();
 };
 
-const originalToggleTime = window.toggleTime;
-window.toggleTime = function() {
+const originalToggleTimer = window.toggleTimer;
+window.toggleTimer = function() {
     closeFabMenu();
-    if (originalToggleTime) originalToggleTime();
+    if (originalToggleTimer) originalToggleTimer();
 };
 
 const originalToggleTrack = window.toggleTrack;
@@ -2016,3 +2040,34 @@ window.showRecapForm = function() {
     });
 };
 
+
+// Edit Recap Event
+function editRecapEvent(entry) {
+    editingEntryId = entry.id;
+    
+    document.getElementById('recap-reflection').value = entry.reflection || '';
+    document.getElementById('recap-rating').value = entry.rating || 5;
+    document.getElementById('recap-rating-value').textContent = entry.rating || 5;
+    
+    if (entry.highlights && entry.highlights.length > 0) {
+        document.getElementById('recap-highlight-1').value = entry.highlights[0] || '';
+        document.getElementById('recap-highlight-2').value = entry.highlights[1] || '';
+        document.getElementById('recap-highlight-3').value = entry.highlights[2] || '';
+    }
+    
+    if (entry.track) {
+        document.getElementById('recap-selected-track').value = JSON.stringify(entry.track);
+        document.getElementById('recap-bso-results').innerHTML = 
+            `<div style="display: flex; align-items: center; gap: 12px; padding: 12px; border: 3px solid #000; background: #f0f0f0;">
+                <img src="${entry.track.artwork}" style="width: 60px; height: 60px; border: 2px solid #000;">
+                <div style="flex: 1;">
+                    <div style="font-weight: bold;">${entry.track.name}</div>
+                    <div style="font-size: 12px; color: #666;">${entry.track.artist}</div>
+                </div>
+                <a href="${entry.track.url}" target="_blank" style="text-decoration: none; font-size: 20px;">🔗</a>
+            </div>`;
+    }
+    
+    showRecapForm();
+}
+}

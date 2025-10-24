@@ -57,25 +57,25 @@
             <button onclick="closeRecapForm()" style="background: transparent; border: none; color: white; cursor: pointer; font-size: 18px;">✕</button>
         </div>
         <div class="mac-content">
-            <label class="mac-label">Reflexión del día</label>
-            <textarea id="recap-reflection" class="mac-textarea" placeholder="¿Cómo fue tu día?"></textarea>
+            <label class="mac-label">Day Reflection</label>
+            <textarea id="recap-reflection" class="mac-textarea" placeholder="How was your day?"></textarea>
             
-            <label class="mac-label">Valoración del día (1-10)</label>
+            <label class="mac-label">Day Rating (1-10)</label>
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
                 <input type="range" id="recap-rating" min="1" max="10" value="5" 
                     style="flex: 1; height: 8px; border: 2px inset #999; background: #ddd;">
                 <span id="recap-rating-value" style="font-size: 24px; font-weight: bold; min-width: 40px;">5</span>
             </div>
             
-            <label class="mac-label">3 cosas destacadas del día</label>
-            <input type="text" id="recap-highlight-1" class="mac-input" placeholder="1. Lo mejor del día">
-            <input type="text" id="recap-highlight-2" class="mac-input" placeholder="2. Algo que aprendiste">
-            <input type="text" id="recap-highlight-3" class="mac-input" placeholder="3. Momento favorito">
+            <label class="mac-label">3 Day Highlights</label>
+            <input type="text" id="recap-highlight-1" class="mac-input" placeholder="1. Best thing today">
+            <input type="text" id="recap-highlight-2" class="mac-input" placeholder="2. Something you learned">
+            <input type="text" id="recap-highlight-3" class="mac-input" placeholder="3. Favorite moment">
             
-            <label class="mac-label">Banda Sonora del Día (BSO)</label>
+            <label class="mac-label">Day Soundtrack</label>
             <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-                <input type="text" id="recap-bso" class="mac-input" placeholder="Buscar canción..." style="margin-bottom: 0;">
-                <button class="mac-button mac-button-primary" onclick="buscarBSO()">🔍 Buscar</button>
+                <input type="text" id="recap-bso" class="mac-input" placeholder="Search song..." style="margin-bottom: 0;">
+                <button class="mac-button mac-button-primary" onclick="buscarBSO()">🔍 Search</button>
             </div>
             <div id="recap-bso-results" style="max-height: 200px; overflow-y: auto;"></div>
             <input type="hidden" id="recap-selected-track">
@@ -178,18 +178,18 @@
         </div>
 
         <div class="mac-window hidden" id="track-window">
-            <div class="mac-title-bar">Quick Track</div>
+            <div class="mac-title-bar">Quick Mark</div>
             <div class="mac-content">
                 <label class="mac-label">📅 Date & Time:</label>
                 <input type="datetime-local" class="mac-input" id="datetime-input-track">
 
-                <label class="mac-label">Select Track Type:</label>
+                <label class="mac-label">Select Mark Type:</label>
                 <div class="activity-selector" id="track-selector"></div>
 
                 <label class="mac-label">Optional Note:</label>
                 <input type="text" class="mac-input" id="track-optional-note" placeholder="Add a short note (optional)">
 
-                <button class="mac-button mac-button-primary" onclick="saveTrackEvent()" id="save-track-btn" disabled style="width: 100%; margin-top: 16px;">Save Track</button>
+                <button class="mac-button mac-button-primary" onclick="saveTrackEvent()" id="save-track-btn" disabled style="width: 100%; margin-top: 16px;">Save Mark</button>
                 <button class="mac-button delete-button hidden" onclick="deleteCurrentEntry()" id="delete-track-btn" style="width: 100%; margin-top: 8px;">🗑️ Delete</button>
                 <button class="mac-button" onclick="toggleTrack()" style="width: 100%; margin-top: 8px;">Cancel</button>
             </div>
@@ -277,10 +277,10 @@
         <button class="fab fab-action hidden" onclick="toggleCrumb()" title="Breadcrumb">
             📍
         </button>
-        <button class="fab fab-action hidden" onclick="toggleTime()" title="Time Event">
+        <button class="fab fab-action hidden" onclick="toggleTimer()" title="Time Event">
             ⏰
         </button>
-        <button class="fab fab-action hidden" onclick="toggleTrack()" title="Quick Track">
+        <button class="fab fab-action hidden" onclick="toggleTrack()" title="Quick Mark">
             🎵
         </button>
         <button class="fab fab-action hidden" onclick="toggleSpent()" title="Spent">
