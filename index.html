@@ -1,169 +1,305 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Breadcrumbs Timeline</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="icon" href="favicon.ico">
-  
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
-
-  <!-- Leaflet -->
-  <link 
-    rel="stylesheet" 
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-sA+e2atCf0fZp4wK0qWQJ0p+1NPMhUQkk+f5QkM7N0k="
-    crossorigin=""
-  />
-  <script 
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-o9N1j9LFb7R2D0JXWm0A6YqQK/G6lH3sZtO6zY1C6s8="
-    crossorigin=""
-  ></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Breadcrumbs Timeline</title>
+    
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon.png">
+    <link rel="icon" type="image/x-icon" href="./favicon.ico">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="./styles.css">
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 </head>
-
 <body>
-  <div id="login-screen">
-    <h2>Offline Breadcrumbs Timeline</h2>
-    <p>Sign in to sync your data</p>
-    <button id="login-google">🔐 Sign in with Google</button>
-    <p>Or continue without account<br>(data saved locally only)</p>
-    <button id="continue-offline">Continue Offline</button>
-  </div>
-
-  <div id="main-app" class="hidden">
-    <header>
-      <button id="sign-out">🚪 Sign Out</button>
-      <button id="add-breadcrumb">➕ Breadcrumb</button>
-      <button id="time-event">⏱️ Time</button>
-      <button id="quick-track">📊 Track</button>
-      <button id="spent">💰 Spent</button>
-    </header>
-
-    <main id="timeline">
-      <p class="no-entries">📍 No entries yet<br>Create your first breadcrumb</p>
-    </main>
-
-    <footer>
-      <button id="save-settings">💾 Save Settings</button>
-      <button id="export-csv">💾 Export CSV</button>
-      <button id="export-ical">📅 Export iCal</button>
-      <button id="settings-btn">⚙️ Settings</button>
-    </footer>
-  </div>
-
-  <!-- Modal: Breadcrumb Form -->
-  <div id="breadcrumb-modal" class="modal hidden">
-    <div class="modal-content">
-      <h3>New Entry</h3>
-
-      <label for="mood">Mood:</label>
-      <select id="mood">
-        <option value="😊">😊</option>
-        <option value="😐">😐</option>
-        <option value="😞">😞</option>
-      </select>
-
-      <label>Note:</label>
-      <textarea id="note" rows="3" placeholder="Write a note..."></textarea>
-
-      <label>Location:</label>
-      <input type="text" id="location" placeholder="Enter location">
-      <button id="use-gps">🌍 Use GPS</button>
-
-      <label>Weather:</label>
-      <input type="text" id="weather" placeholder="e.g. Sunny">
-
-      <label>Images:</label>
-      <input type="file" id="images" accept="image/*" multiple>
-
-      <label>Audio:</label>
-      <div id="audio-controls">
-        <button id="record">🔴 Record</button>
-        <button id="stop" disabled>⏹️ Stop</button>
-        <audio id="audio-preview" controls class="hidden"></audio>
-      </div>
-
-      <div class="buttons">
-        <button id="save-entry">💾 Save</button>
-        <button id="cancel-entry">Cancel</button>
-      </div>
+    <div class="header-container">
+        <img class="header-image" src="./header.png" alt="Breadcrumbs Timeline Header">
     </div>
-  </div>
+    
+    <div class="sync-status" id="sync-status">â— Offline</div>
 
-  <!-- Modal: Time -->
-  <div id="time-modal" class="modal hidden">
-    <div class="modal-content">
-      <h3>Time Event</h3>
-      <label>Duration:</label>
-      <div id="durations">
-        <button data-min="15">15 min</button>
-        <button data-min="30">30 min</button>
-        <button data-min="60">1 hour</button>
-        <button data-min="120">2 hours</button>
-        <button data-min="180">3 hours</button>
-      </div>
-
-      <label>Activity:</label>
-      <div id="activities">
-        <button>📚 Reading</button>
-        <button>🏃 Sports</button>
-        <button>💼 Work</button>
-        <button>🧹 Cleaning</button>
-        <button>🛒 Errands</button>
-      </div>
-
-      <div class="buttons">
-        <button id="create-event">Create Event</button>
-        <button id="cancel-time">Cancel</button>
-      </div>
+    <div id="auth-container" class="auth-panel">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="font-size: 20px;">Breadcrumbs Timeline</h2>
+            <p style="font-size: 12px; color: #666;">Sign in to sync your data</p>
+        </div>
+        
+        <button class="mac-button mac-button-primary" onclick="signInWithGoogle()" style="width: 100%; margin-bottom: 12px; font-size: 16px;">
+            ðŸ” Sign in with Google
+        </button>
+        
+        <button class="mac-button" onclick="signInWithEmail()" style="width: 100%; margin-bottom: 12px; font-size: 14px;">
+            ðŸ“§ Sign in with Email
+        </button>
+        
+        <div style="text-align: center; margin-top: 16px; font-size: 11px; color: #666;">
+            Or continue without account
+            <br>
+            <span style="font-size: 10px;">(data saved locally only)</span>
+            <br>
+            <button class="mac-button" onclick="continueOffline()" style="margin-top: 8px; font-size: 11px;">Continue Offline</button>
+        </div>
     </div>
-  </div>
 
-  <!-- Modal: Track -->
-  <div id="track-modal" class="modal hidden">
-    <div class="modal-content">
-      <h3>Quick Track</h3>
-      <div id="meals">
-        <p>Meals:</p>
-        <button>🍳 Breakfast</button>
-        <button>🥗 Lunch</button>
-        <button>🍽️ Dinner</button>
-        <button>☕ Snack</button>
-      </div>
-      <div id="tasks">
-        <p>Tasks:</p>
-        <button>💊 Medicine</button>
-        <button>💧 Water</button>
-        <button>🚶 Walk</button>
-        <button>📞 Call</button>
-      </div>
-      <div class="buttons">
-        <button id="close-track">Close</button>
-      </div>
+    <div class="container" id="main-app" style="display: none;">
+        
+    <!-- Recap Form -->
+    <div id="recap-form" class="mac-window hidden">
+        <div class="mac-title-bar">
+            <span>ðŸŒŸ Day Recap</span>
+            <button onclick="closeRecapForm()" style="background: transparent; border: none; color: white; cursor: pointer; font-size: 18px;">âœ•</button>
+        </div>
+        <div class="mac-content">
+            <label class="mac-label">Day Reflection</label>
+            <textarea id="recap-reflection" class="mac-textarea" placeholder="How was your day?"></textarea>
+            
+            <label class="mac-label">Day Rating (1-10)</label>
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                <input type="range" id="recap-rating" min="1" max="10" value="5" 
+                    style="flex: 1; height: 8px; border: 2px inset #999; background: #ddd;">
+                <span id="recap-rating-value" style="font-size: 24px; font-weight: bold; min-width: 40px;">5</span>
+            </div>
+            
+            <label class="mac-label">3 Day Highlights</label>
+            <input type="text" id="recap-highlight-1" class="mac-input" placeholder="1. Best thing today">
+            <input type="text" id="recap-highlight-2" class="mac-input" placeholder="2. Something you learned">
+            <input type="text" id="recap-highlight-3" class="mac-input" placeholder="3. Favorite moment">
+            
+            <label class="mac-label">Day Soundtrack</label>
+            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                <input type="text" id="recap-bso" class="mac-input" placeholder="Search song..." style="margin-bottom: 0;">
+                <button class="mac-button mac-button-primary" onclick="buscarBSO()">ðŸ” Search</button>
+            </div>
+            <div id="recap-bso-results" style="max-height: 200px; overflow-y: auto;"></div>
+            <input type="hidden" id="recap-selected-track">
+            
+            <div style="margin-top: 16px;">
+                <button class="mac-button mac-button-primary" onclick="saveRecap()" id="save-recap-btn">ðŸ’¾ Save Recap</button>
+                <button class="mac-button delete-button hidden" onclick="deleteCurrentEntry()" id="delete-recap-btn">Delete</button>
+                <button class="mac-button" onclick="closeRecapForm()">Cancel</button>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <!-- Modal: Spent -->
-  <div id="spent-modal" class="modal hidden">
-    <div class="modal-content">
-      <h3>Spent</h3>
-      <label>Description:</label>
-      <input type="text" id="spent-desc" placeholder="What did you spend on?">
-      <label>Amount (€):</label>
-      <input type="number" id="spent-amount" step="0.01" min="0">
-      <div class="buttons">
-        <button id="save-spent">💾 Save</button>
-        <button id="cancel-spent">Cancel</button>
-      </div>
+    <div class="mac-window" style="display: none;">
+            <div class="mac-title-bar">
+                <div class="title-left">
+                    <span>Breadcrumbs Timeline</span>
+                    <button class="sync-button" onclick="syncData()" title="Refresh & Sync">ðŸ”„</button>
+                </div>
+                <div class="user-avatar" id="user-avatar" onclick="toggleUserMenu(event)" style="display: none;">
+                    <span id="user-icon">ðŸ‘¤</span>
+                    <div class="logout-menu" id="logout-menu">
+                        <div class="user-email-display" id="user-email-full"></div>
+                        <button onclick="signOutUser(); event.stopPropagation();">ðŸšª Sign Out</button>
+                    </div>
+                </div>
+            </div>
+            <div class="mac-content">
+                <button class="mac-button mac-button-primary" onclick="toggleForm()">âž• Crumb</button>
+                <button class="mac-button" onclick="toggleTimer()">â±ï¸ Time</button>
+                <button class="mac-button" onclick="toggleTrack()">ðŸ“Š Track</button>
+                <button class="mac-button" onclick="toggleSpent()">ðŸ’° Spent</button>
+            </div>
+        </div>
+
+        <div class="mac-window hidden" id="form-window">
+            <div class="mac-title-bar">New Entry</div>
+            <div class="mac-content">
+                <label class="mac-label">ðŸ“… Date & Time:</label>
+                <input type="datetime-local" class="mac-input" id="datetime-input">
+
+                <label class="mac-label">
+                    ðŸ˜Š Mood:
+                    <button class="mac-button mood-config-btn" onclick="toggleMoodConfig()">âš™ï¸</button>
+                </label>
+                
+                <div id="mood-config" class="config-panel hidden">
+                    <div style="margin-bottom: 12px; font-weight: bold;">Configure moods:</div>
+                    <div id="mood-config-list"></div>
+                    <button class="mac-button" onclick="saveMoodConfig()" style="margin-top: 8px;">ðŸ’¾ Save Configuration</button>
+                </div>
+
+                <div class="mood-selector" id="mood-selector"></div>
+
+                <label class="mac-label">Note:</label>
+                <textarea class="mac-textarea" id="note-input" placeholder="What's happening?"></textarea>
+
+                <label class="mac-label">ðŸ“ Location:</label>
+                <input type="text" class="mac-input" id="location-input" placeholder="Place">
+                <button class="mac-button" onclick="getGPS()" id="gps-btn">ðŸŒ Use GPS</button>
+                <div id="form-map" class="mini-map" style="display: none;"></div>
+
+                <label class="mac-label">â˜ï¸ Weather:</label>
+                <input type="text" class="mac-input" id="weather-input" placeholder="Sunny, cloudy...">
+
+                <label class="mac-label">ðŸ–¼ï¸ Images:</label>
+                <input type="file" accept="image/*" multiple onchange="handleImages(event)" style="margin-bottom: 12px;">
+                <div id="image-previews"></div>
+
+                <label class="mac-label">ðŸŽ¤ Audio:</label>
+                <div class="audio-recorder">
+                    <button class="mac-button" onclick="startRecording()" id="record-btn">ðŸ”´ Record</button>
+                    <button class="mac-button" onclick="stopRecording()" id="stop-record-btn" disabled>â¹ï¸ Stop</button>
+                    <div id="audio-preview" style="margin-top: 8px;"></div>
+                </div>
+
+                <button class="mac-button mac-button-primary" onclick="saveEntry()" id="save-btn">ðŸ’¾ Save</button>
+                <button class="mac-button delete-button hidden" onclick="deleteCurrentEntry()" id="delete-btn">ðŸ—‘ï¸ Delete</button>
+                <button class="mac-button" onclick="cancelEdit()">Cancel</button>
+            </div>
+        </div>
+
+        <div class="mac-window hidden" id="timer-window">
+            <div class="mac-title-bar">Time Event</div>
+            <div class="mac-content">
+                <label class="mac-label">ðŸ“… Date & Time:</label>
+                <input type="datetime-local" class="mac-input" id="datetime-input-time">
+
+                <label class="mac-label">Duration:</label>
+                <div class="duration-selector" id="duration-selector"></div>
+
+                <label class="mac-label">Activity:</label>
+                <div class="activity-selector" id="activity-selector"></div>
+
+                <label class="mac-label">Optional Note:</label>
+                <input type="text" class="mac-input" id="time-optional-note" placeholder="Add a short note (optional)">
+
+                <button class="mac-button mac-button-primary" onclick="createTimeEvent()" id="create-time-btn" disabled style="width: 100%; margin-top: 16px;">Create Event</button>
+                <button class="mac-button delete-button hidden" onclick="deleteCurrentEntry()" id="delete-time-btn" style="width: 100%; margin-top: 8px;">ðŸ—‘ï¸ Delete</button>
+                <button class="mac-button" onclick="toggleTimer()" style="width: 100%; margin-top: 8px;">Cancel</button>
+            </div>
+        </div>
+
+        <div class="mac-window hidden" id="track-window">
+            <div class="mac-title-bar">Quick Mark</div>
+            <div class="mac-content">
+                <label class="mac-label">ðŸ“… Date & Time:</label>
+                <input type="datetime-local" class="mac-input" id="datetime-input-track">
+
+                <label class="mac-label">Select Mark Type:</label>
+                <div class="activity-selector" id="track-selector"></div>
+
+                <label class="mac-label">Optional Note:</label>
+                <input type="text" class="mac-input" id="track-optional-note" placeholder="Add a short note (optional)">
+
+                <button class="mac-button mac-button-primary" onclick="saveTrackEvent()" id="save-track-btn" disabled style="width: 100%; margin-top: 16px;">Save Mark</button>
+                <button class="mac-button delete-button hidden" onclick="deleteCurrentEntry()" id="delete-track-btn" style="width: 100%; margin-top: 8px;">ðŸ—‘ï¸ Delete</button>
+                <button class="mac-button" onclick="toggleTrack()" style="width: 100%; margin-top: 8px;">Cancel</button>
+            </div>
+        </div>
+
+        <div class="mac-window hidden" id="spent-window">
+            <div class="mac-title-bar">Spent</div>
+            <div class="mac-content">
+                <label class="mac-label">ðŸ“… Date & Time:</label>
+                <input type="datetime-local" class="mac-input" id="datetime-input-spent">
+
+                <label class="mac-label">Description:</label>
+                <input type="text" class="mac-input" id="spent-description" placeholder="What did you buy?">
+
+                <label class="mac-label">Amount:</label>
+                <div class="spent-input">
+                    <input type="number" class="mac-input" id="spent-amount" placeholder="0.00" step="0.01" style="margin: 0;">
+                    <span style="font-weight: bold;">â‚¬</span>
+                </div>
+
+                <button class="mac-button mac-button-primary" onclick="saveSpent()" style="width: 100%;">ðŸ’¾ Save</button>
+                <button class="mac-button delete-button hidden" onclick="deleteCurrentEntry()" id="delete-spent-btn" style="width: 100%; margin-top: 8px;">ðŸ—‘ï¸ Delete</button>
+                <button class="mac-button" onclick="toggleSpent()" style="width: 100%; margin-top: 8px;">Cancel</button>
+            </div>
+        </div>
+
+        <div id="timeline-container"></div>
+
+        <div class="mac-window hidden" id="empty-state">
+            <div class="mac-content empty-state">
+                <div style="font-size: 48px; margin-bottom: 16px;">ðŸ“</div>
+                <p><strong>No entries yet</strong></p>
+                <p style="color: #666; margin-top: 8px;">Create your first breadcrumb</p>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <script src="script.js"></script>
+    <div id="preview-modal" class="preview-modal" onclick="closePreview(event)">
+        <div class="preview-content" onclick="event.stopPropagation()">
+            <div class="mac-title-bar">
+                <span>Preview</span>
+                <button onclick="closePreview()" style="background: #fff; border: 2px solid #000; padding: 2px 8px; cursor: pointer;">âœ•</button>
+            </div>
+            <div class="mac-content" id="preview-body"></div>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="preview-modal" onclick="closeSettings(event)">
+        <div class="preview-content" onclick="event.stopPropagation()">
+            <div class="mac-title-bar">
+                <span>Settings</span>
+                <button onclick="closeSettings()" style="background: #fff; border: 2px solid #000; padding: 2px 8px; cursor: pointer;">âœ•</button>
+            </div>
+            <div class="mac-content">
+                <h3 style="margin-bottom: 16px;">Time Durations</h3>
+                <div id="time-durations-config"></div>
+                
+                <h3 style="margin-top: 24px; margin-bottom: 16px;">Time Activities</h3>
+                <div id="time-activities-config"></div>
+                
+                <h3 style="margin-top: 24px; margin-bottom: 16px;">Track Items</h3>
+                <div id="track-items-config"></div>
+                
+                <button class="mac-button mac-button-primary" onclick="saveSettings()" style="width: 100%; margin-top: 24px;">ðŸ’¾ Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="stats-modal" class="preview-modal" onclick="closeStats(event)">
+        <div class="preview-content" onclick="event.stopPropagation()">
+            <div class="mac-title-bar">
+                <span>ðŸ“Š Statistics</span>
+                <button onclick="closeStats()" style="background: #fff; border: 2px solid #000; padding: 2px 8px; cursor: pointer;">âœ•</button>
+            </div>
+            <div class="mac-content">
+                <div class="stats-grid" id="stats-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="fab-container">
+        <button class="fab fab-main" onclick="toggleFabMenu()" id="fab-main">
+            <span id="fab-icon">+</span>
+        </button>
+        <button class="fab fab-action hidden" onclick="toggleCrumb()" title="Breadcrumb">
+            ðŸ“
+        </button>
+        <button class="fab fab-action hidden" onclick="toggleTimer()" title="Time Event">
+            â°
+        </button>
+        <button class="fab fab-action hidden" onclick="toggleTrack()" title="Quick Mark">
+            ðŸŽµ
+        </button>
+        <button class="fab fab-action hidden" onclick="toggleSpent()" title="Spent">
+            ðŸ’°
+        </button>
+        <button class="fab fab-action hidden" onclick="showRecapForm()" title="Day Recap">
+            ðŸŒŸ
+        </button>
+    </div>
+
+    <div class="footer" id="footer" style="display: none;">
+        <button class="mac-button" onclick="openStats()">ðŸ“Š Stats</button>
+        <button class="mac-button" onclick="exportCSV()">ðŸ’¾ CSV</button>
+        <button class="mac-button" onclick="exportICS()">ðŸ“… iCal</button>
+        <button class="mac-button" onclick="openSettings()">âš™ï¸ Settings</button>
+    </div>
+
+    <script src="./firebase-config.js"></script>
+    <script src="./app.js"></script>
 </body>
 </html>
