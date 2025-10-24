@@ -2071,3 +2071,48 @@ function editRecapEvent(entry) {
     showRecapForm();
 }
 }
+
+// Toggle Crumb Form
+function toggleCrumb() {
+    const formWindow = document.getElementById('form-window');
+    
+    if (formWindow.classList.contains('hidden')) {
+        // Limpiar formulario
+        editingEntryId = null;
+        document.getElementById('note-input').value = '';
+        document.getElementById('location-input').value = '';
+        document.getElementById('weather-input').value = '';
+        currentImages = [];
+        currentAudio = null;
+        currentCoords = null;
+        selectedMood = null;
+        
+        // Set current datetime
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        document.getElementById('datetime-input').value = `${year}-${month}-${day}T${hours}:${minutes}`;
+        
+        renderImagePreviews();
+        renderAudioPreview();
+        renderMoodSelector();
+        
+        document.getElementById('delete-btn').classList.add('hidden');
+        document.getElementById('save-btn').textContent = '💾 Save';
+        
+        // Hide other forms
+        document.getElementById('timer-window').classList.add('hidden');
+        document.getElementById('track-window').classList.add('hidden');
+        document.getElementById('spent-window').classList.add('hidden');
+        document.getElementById('recap-form').classList.add('hidden');
+        
+        // Show this form
+        formWindow.classList.remove('hidden');
+        formWindow.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+        formWindow.classList.add('hidden');
+    }
+}
