@@ -20,7 +20,7 @@ function refreshApp() {
     if (currentUser && !isOfflineMode) {
         loadDataFromFirebase();
         loadSettingsFromFirebase();
-        alert('âœ… Synced!');
+        alert('✅ Synced!');
     } else {
         location.reload();
     }
@@ -32,17 +32,17 @@ function refreshApp() {
 let timeDurations = [15, 30, 60, 120, 180];
 let timeActivities = ['Reading', 'Sports', 'Work', 'Cleaning', 'Errands'];
 let trackItems = {
-    meals: ['ðŸ³ Breakfast', 'ðŸ¥— Lunch', 'ðŸ½ï¸ Dinner', 'â˜• Snack'],
-    tasks: ['ðŸ’Š Medicine', 'ðŸ’§ Water', 'ðŸš¶ Walk', 'ðŸ“ž Call']
+    meals: ['🍳 Breakfast', '🥗 Lunch', '🍽️ Dinner', '☕ Snack'],
+    tasks: ['💊 Medicine', '💧 Water', '🚶 Walk', '📞 Call']
 };
 
 // Default moods
 const defaultMoods = [
-    { emoji: 'ðŸ˜Š', label: 'Happy' },
-    { emoji: 'ðŸ˜¢', label: 'Sad' },
-    { emoji: 'ðŸ˜¡', label: 'Angry' },
-    { emoji: 'ðŸ˜°', label: 'Anxious' },
-    { emoji: 'ðŸ˜´', label: 'Tired' }
+    { emoji: '😊', label: 'Happy' },
+    { emoji: '😢', label: 'Sad' },
+    { emoji: '😡', label: 'Angry' },
+    { emoji: '😰', label: 'Anxious' },
+    { emoji: '😴', label: 'Tired' }
 ];
 
 let moods = [...defaultMoods];
@@ -97,11 +97,9 @@ function toggleForm() {
     const timer = document.getElementById('timer-window');
     const track = document.getElementById('track-window');
     const spent = document.getElementById('spent-window');
-    const recap = document.getElementById('recap-form');
     timer.classList.add('hidden');
     track.classList.add('hidden');
     spent.classList.add('hidden');
-    recap.classList.add('hidden');
     form.classList.toggle('hidden');
     if (!form.classList.contains('hidden')) {
         clearForm();
@@ -115,11 +113,9 @@ function toggleTimer() {
     const form = document.getElementById('form-window');
     const track = document.getElementById('track-window');
     const spent = document.getElementById('spent-window');
-    const recap = document.getElementById('recap-form');
     form.classList.add('hidden');
     track.classList.add('hidden');
     spent.classList.add('hidden');
-    recap.classList.add('hidden');
     timer.classList.toggle('hidden');
     if (!timer.classList.contains('hidden')) {
         resetTimerSelections();
@@ -132,11 +128,9 @@ function toggleTrack() {
     const form = document.getElementById('form-window');
     const timer = document.getElementById('timer-window');
     const spent = document.getElementById('spent-window');
-    const recap = document.getElementById('recap-form');
     form.classList.add('hidden');
     timer.classList.add('hidden');
     spent.classList.add('hidden');
-    recap.classList.add('hidden');
     track.classList.toggle('hidden');
     if (!track.classList.contains('hidden')) {
         renderTrackSelector();
@@ -153,11 +147,9 @@ function toggleSpent() {
     const form = document.getElementById('form-window');
     const timer = document.getElementById('timer-window');
     const track = document.getElementById('track-window');
-    const recap = document.getElementById('recap-form');
     form.classList.add('hidden');
     timer.classList.add('hidden');
     track.classList.add('hidden');
-    recap.classList.add('hidden');
     spent.classList.toggle('hidden');
     if (!spent.classList.contains('hidden')) {
         document.getElementById('spent-description').value = '';
@@ -200,7 +192,7 @@ function clearForm() {
     document.getElementById('image-previews').innerHTML = '';
     document.getElementById('audio-preview').innerHTML = '';
     document.getElementById('delete-btn').classList.add('hidden');
-    document.getElementById('save-btn').textContent = 'ðŸ’¾ Save';
+    document.getElementById('save-btn').textContent = '💾 Save';
     document.getElementById('mood-config').classList.add('hidden');
     const mapContainer = document.getElementById('form-map');
     if (mapContainer) {
@@ -218,12 +210,12 @@ function cancelEdit() {
 function getGPS() {
     const btn = document.getElementById('gps-btn');
     const locationInput = document.getElementById('location-input');
-    btn.textContent = 'â³ Searching...';
+    btn.textContent = '⏳ Searching...';
     btn.disabled = true;
 
     if (!navigator.geolocation) {
         alert('Geolocation not available');
-        btn.textContent = 'ðŸŒ Use GPS';
+        btn.textContent = '🌍 Use GPS';
         btn.disabled = false;
         return;
     }
@@ -239,12 +231,12 @@ function getGPS() {
             showMiniMap(lat, lon, 'form-map');
             getWeather(lat, lon);
             
-            btn.textContent = 'ðŸŒ GPS OK';
+            btn.textContent = '🌍 GPS OK';
             btn.disabled = false;
         },
         (error) => {
             console.error('GPS Error:', error);
-            btn.textContent = 'ðŸŒ Use GPS';
+            btn.textContent = '🌍 Use GPS';
             btn.disabled = false;
         },
         {
@@ -259,7 +251,7 @@ async function getWeather(lat, lon) {
     const weatherInput = document.getElementById('weather-input');
     const locationInput = document.getElementById('location-input');
     
-    weatherInput.value = 'â³ Getting weather...';
+    weatherInput.value = '⏳ Getting weather...';
     
     try {
         const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric&lang=en`;
@@ -277,7 +269,7 @@ async function getWeather(lat, lon) {
         const emoji = getWeatherEmoji(data.weather[0].id);
         const city = data.name || 'Unknown';
         
-        weatherInput.value = `${emoji} ${description}, ${temp}Â°C in ${city}`;
+        weatherInput.value = `${emoji} ${description}, ${temp}°C in ${city}`;
         locationInput.value = city;
     } catch (error) {
         console.error('Error getting weather:', error);
@@ -287,14 +279,14 @@ async function getWeather(lat, lon) {
 }
 
 function getWeatherEmoji(code) {
-    if (code >= 200 && code < 300) return 'â›ˆï¸';
-    if (code >= 300 && code < 400) return 'ðŸŒ¦ï¸';
-    if (code >= 500 && code < 600) return 'ðŸŒ§ï¸';
-    if (code >= 600 && code < 700) return 'â„ï¸';
-    if (code >= 700 && code < 800) return 'ðŸŒ«ï¸';
-    if (code === 800) return 'â˜€ï¸';
-    if (code > 800) return 'â˜ï¸';
-    return 'ðŸŒ¤ï¸';
+    if (code >= 200 && code < 300) return '⛈️';
+    if (code >= 300 && code < 400) return '🌦️';
+    if (code >= 500 && code < 600) return '🌧️';
+    if (code >= 600 && code < 700) return '❄️';
+    if (code >= 700 && code < 800) return '🌫️';
+    if (code === 800) return '☀️';
+    if (code > 800) return '☁️';
+    return '🌤️';
 }
 
 function showMiniMap(lat, lon, containerId) {
@@ -307,7 +299,7 @@ function showMiniMap(lat, lon, containerId) {
     const map = L.map(containerId).setView([lat, lon], 13);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: 'Â© OpenStreetMap',
+        attribution: '© OpenStreetMap',
         maxZoom: 19
     }).addTo(map);
 
@@ -422,7 +414,7 @@ function renderImagePreviews() {
     container.innerHTML = currentImages.map((img, idx) => `
         <div class="image-preview">
             <img src="${img}" alt="">
-            <div class="image-remove" onclick="removeImage(${idx})">âœ•</div>
+            <div class="image-remove" onclick="removeImage(${idx})">✕</div>
         </div>
     `).join('');
 }
@@ -435,7 +427,7 @@ function renderAudioPreview() {
                 <audio controls style="flex: 1;">
                     <source src="${currentAudio}" type="audio/webm">
                 </audio>
-                <button class="mac-button" onclick="removeAudio()" style="padding: 4px 8px;">âœ•</button>
+                <button class="mac-button" onclick="removeAudio()" style="padding: 4px 8px;">✕</button>
             </div>
         `;
     } else {
@@ -497,7 +489,7 @@ function saveMoodConfig() {
     }
     renderMoodSelector();
     toggleMoodConfig();
-    alert('âœ… Configuration saved');
+    alert('✅ Configuration saved');
 }
 
 // Save/Edit entry functions
@@ -603,7 +595,7 @@ function editEntry(id) {
     }
 
     document.getElementById('delete-btn').classList.remove('hidden');
-    document.getElementById('save-btn').textContent = 'ðŸ’¾ Update';
+    document.getElementById('save-btn').textContent = '💾 Update';
     
     const formWindow = document.getElementById('form-window');
     formWindow.classList.remove('hidden');
@@ -649,7 +641,7 @@ function editTimeEvent(entry) {
     
     const timerWindow = document.getElementById('timer-window');
     const createBtn = document.getElementById('create-time-btn');
-    createBtn.textContent = 'ðŸ’¾ Update Event';
+    createBtn.textContent = '💾 Update Event';
     document.getElementById('delete-time-btn').classList.remove('hidden');
     
     timerWindow.classList.remove('hidden');
@@ -738,7 +730,7 @@ function createTimeEvent() {
     saveData();
     renderTimeline();
     
-    alert(`âœ… Time event ${editingEntryId ? 'updated' : 'created'}!`);
+    alert(`✅ Time event ${editingEntryId ? 'updated' : 'created'}!`);
     toggleTimer();
     
     document.getElementById('create-time-btn').textContent = 'Create Event';
@@ -805,7 +797,7 @@ function editTrackEvent(entry) {
     });
     
     document.getElementById('save-track-btn').disabled = false;
-    document.getElementById('save-track-btn').textContent = 'ðŸ’¾ Update Track';
+    document.getElementById('save-track-btn').textContent = '💾 Update Track';
     document.getElementById('delete-track-btn').classList.remove('hidden');
     
     const trackWindow = document.getElementById('track-window');
@@ -830,7 +822,7 @@ function saveTrackEvent() {
             };
         }
         editingEntryId = null;
-        alert(`âœ… Track updated: ${selectedTrackItem}`);
+        alert(`✅ Track updated: ${selectedTrackItem}`);
     } else {
         const entry = {
             id: Date.now(),
@@ -847,7 +839,7 @@ function saveTrackEvent() {
         };
         
         entries.unshift(entry);
-        alert(`âœ… Tracked: ${selectedTrackItem}`);
+        alert(`✅ Tracked: ${selectedTrackItem}`);
     }
     
     saveData();
@@ -908,7 +900,7 @@ function saveSpent() {
             };
         }
         editingEntryId = null;
-        alert(`âœ… Spent updated: â‚¬${amount.toFixed(2)}`);
+        alert(`✅ Spent updated: €${amount.toFixed(2)}`);
     } else {
         const entry = {
             id: Date.now(),
@@ -925,7 +917,7 @@ function saveSpent() {
         };
         
         entries.unshift(entry);
-        alert(`âœ… Spent tracked: â‚¬${amount.toFixed(2)}`);
+        alert(`✅ Spent tracked: €${amount.toFixed(2)}`);
     }
     
     saveData();
@@ -953,7 +945,6 @@ function deleteCurrentEntry() {
         document.getElementById('timer-window').classList.add('hidden');
         document.getElementById('track-window').classList.add('hidden');
         document.getElementById('spent-window').classList.add('hidden');
-        document.getElementById('recap-form').classList.add('hidden');
         
         editingEntryId = null;
     }
@@ -1029,7 +1020,7 @@ function previewEntry(id) {
         
         ${entry.isSpent ? `
             <div style="margin-bottom: 16px;">
-                <strong>Amount Spent:</strong> â‚¬${entry.spentAmount.toFixed(2)}
+                <strong>Amount Spent:</strong> €${entry.spentAmount.toFixed(2)}
             </div>
         ` : ''}
     `;
@@ -1043,7 +1034,7 @@ function previewEntry(id) {
             if (mapContainer) {
                 const map = L.map('preview-map-modal').setView([entry.coords.lat, entry.coords.lon], 13);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: 'Â© OpenStreetMap'
+                    attribution: '© OpenStreetMap'
                 }).addTo(map);
                 L.marker([entry.coords.lat, entry.coords.lon]).addTo(map);
                 
@@ -1100,20 +1091,20 @@ function renderSettingsConfig() {
         <div class="config-item">
             <input type="number" value="${duration}" id="duration-${index}" style="flex: 0 0 100px;">
             <span>minutes</span>
-            <button class="mac-button" onclick="removeDuration(${index})" style="padding: 4px 8px; margin-left: auto;">âœ•</button>
+            <button class="mac-button" onclick="removeDuration(${index})" style="padding: 4px 8px; margin-left: auto;">✕</button>
         </div>
     `).join('') + `
-        <button class="mac-button" onclick="addDuration()" style="margin-top: 8px;">âž• Add Duration</button>
+        <button class="mac-button" onclick="addDuration()" style="margin-top: 8px;">➕ Add Duration</button>
     `;
 
     const activitiesContainer = document.getElementById('time-activities-config');
     activitiesContainer.innerHTML = timeActivities.map((activity, index) => `
         <div class="config-item">
             <input type="text" value="${activity}" id="activity-${index}">
-            <button class="mac-button" onclick="removeActivity(${index})" style="padding: 4px 8px;">âœ•</button>
+            <button class="mac-button" onclick="removeActivity(${index})" style="padding: 4px 8px;">✕</button>
         </div>
     `).join('') + `
-        <button class="mac-button" onclick="addActivity()" style="margin-top: 8px;">âž• Add Activity</button>
+        <button class="mac-button" onclick="addActivity()" style="margin-top: 8px;">➕ Add Activity</button>
     `;
 
     const trackContainer = document.getElementById('track-items-config');
@@ -1123,20 +1114,20 @@ function renderSettingsConfig() {
             ${trackItems.meals.map((item, index) => `
                 <div class="config-item">
                     <input type="text" value="${item}" id="meal-${index}">
-                    <button class="mac-button" onclick="removeMeal(${index})" style="padding: 4px 8px;">âœ•</button>
+                    <button class="mac-button" onclick="removeMeal(${index})" style="padding: 4px 8px;">✕</button>
                 </div>
             `).join('')}
-            <button class="mac-button" onclick="addMeal()" style="margin-top: 8px;">âž• Add Meal</button>
+            <button class="mac-button" onclick="addMeal()" style="margin-top: 8px;">➕ Add Meal</button>
         </div>
         <div>
             <strong>Tasks:</strong>
             ${trackItems.tasks.map((item, index) => `
                 <div class="config-item">
                     <input type="text" value="${item}" id="task-${index}">
-                    <button class="mac-button" onclick="removeTask(${index})" style="padding: 4px 8px;">âœ•</button>
+                    <button class="mac-button" onclick="removeTask(${index})" style="padding: 4px 8px;">✕</button>
                 </div>
             `).join('')}
-            <button class="mac-button" onclick="addTask()" style="margin-top: 8px;">âž• Add Task</button>
+            <button class="mac-button" onclick="addTask()" style="margin-top: 8px;">➕ Add Task</button>
         </div>
     `;
 }
@@ -1162,7 +1153,7 @@ function removeActivity(index) {
 }
 
 function addMeal() {
-    trackItems.meals.push('ðŸ´ New Meal');
+    trackItems.meals.push('🍴 New Meal');
     renderSettingsConfig();
 }
 
@@ -1172,7 +1163,7 @@ function removeMeal(index) {
 }
 
 function addTask() {
-    trackItems.tasks.push('âœ“ New Task');
+    trackItems.tasks.push('✓ New Task');
     renderSettingsConfig();
 }
 
@@ -1211,7 +1202,7 @@ function saveSettings() {
     updateTimerOptions();
     updateTrackOptions();
     closeSettings();
-    alert('âœ… Settings saved!');
+    alert('✅ Settings saved!');
 }
 
 function updateTimerOptions() {
@@ -1286,16 +1277,6 @@ function toggleDay(dayKey) {
     chevron.classList.toggle('expanded');
 }
 
-// Toggle Recap View
-function toggleRecapView(recapId) {
-    const content = document.getElementById(`recap-content-${recapId}`);
-    const chevron = document.getElementById(`recap-chevron-${recapId}`);
-    
-    if (content && chevron) {
-        content.classList.toggle('hidden');
-        chevron.classList.toggle('expanded');
-    }
-}
 
 // Show image in modal
 function showImageInModal(entryId, imageIndex) {
@@ -1349,10 +1330,6 @@ function renderTimeline() {
     emptyState.classList.add('hidden');
     footer.style.display = 'flex';
 
-    // Obtener el dayKey de hoy para expandirlo por defecto
-    const today = new Date();
-    const todayKey = getDayKey(today.toISOString());
-
     const groupedByDay = {};
     entries.forEach(entry => {
         const dayKey = getDayKey(entry.timestamp);
@@ -1377,17 +1354,17 @@ function renderTimeline() {
                     <div class="day-block">
                         <div class="day-header" onclick="toggleDay('${dayKey}')">
                             <span>${formatDate(firstEntry.timestamp)}</span>
-                            <span class="chevron ${dayKey === todayKey ? 'expanded' : ''}" id="chevron-${dayKey}">â–¼</span>
+                            <span class="chevron" id="chevron-${dayKey}">▼</span>
                         </div>
                         
                         ${recaps.map(recap => `
                             <div class="day-recap" id="recap-${recap.id}">
                                 <div class="recap-header" onclick="toggleRecapView(${recap.id})">
-                                    <span class="recap-chevron" id="recap-chevron-${recap.id}">â–¼</span>
-                                    <span>ðŸŒŸ Day Recap</span>
+                                    <span>🌟 Day Recap</span>
+                                    <span class="recap-chevron" id="recap-chevron-${recap.id}">▼</span>
                                 </div>
                                 <div class="recap-content hidden" id="recap-content-${recap.id}">
-                                    <div class="recap-rating">Rating: ${'â­'.repeat(recap.rating)}</div>
+                                    <div class="recap-rating">Rating: ${'⭐'.repeat(recap.rating)}</div>
                                     ${recap.reflection ? `<div class="recap-section"><strong>Reflection:</strong><br>${recap.reflection}</div>` : ''}
                                     ${recap.highlights && recap.highlights.length > 0 ? `
                                         <div class="recap-section">
@@ -1406,16 +1383,16 @@ function renderTimeline() {
                                                     <div style="font-weight: bold; font-size: 12px;">${recap.track.name}</div>
                                                     <div style="font-size: 11px; color: #666;">${recap.track.artist}</div>
                                                 </div>
-                                                <a href="${recap.track.url}" target="_blank" style="text-decoration: none;">ðŸ”—</a>
+                                                <a href="${recap.track.url}" target="_blank" style="text-decoration: none;">🔗</a>
                                             </div>
                                         </div>
                                     ` : ''}
-                                    <button class="mac-button edit-button" onclick="editEntry(${recap.id})" style="margin-top: 12px;">âœï¸ Edit</button>
+                                    <button class="mac-button edit-button" onclick="editEntry(${recap.id})" style="margin-top: 12px;">✏️ Edit</button>
                                 </div>
                             </div>
                         `).join('')}
                         
-                        <div class="day-content ${dayKey === todayKey ? 'expanded' : ''}" id="day-content-${dayKey}">
+                        <div class="day-content" id="day-content-${dayKey}">
                             ${normalEntries.map(entry => {
                                 const heightStyle = entry.isTimedActivity && entry.duration ? `min-height: ${Math.min(150 + entry.duration * 0.5, 300)}px;` : '';
                                 const trackClass = entry.isQuickTrack ? 'track-event' : '';
@@ -1423,10 +1400,10 @@ function renderTimeline() {
                                 
                                 return `
                                 <div class="breadcrumb-entry ${entry.isTimedActivity ? 'edit-mode' : ''} ${trackClass} ${spentClass}" style="${heightStyle}">
-                                    <button class="mac-button edit-button" onclick="editEntry(${entry.id})">âœï¸ Edit</button>
+                                    <button class="mac-button edit-button" onclick="editEntry(${entry.id})">✏️ Edit</button>
                                     
                                     ${entry.isTimedActivity ? 
-                                        `<div class="breadcrumb-time">â° ${formatTime(entry.timestamp)} - ${calculateEndTime(entry.timestamp, entry.duration)}</div>
+                                        `<div class="breadcrumb-time">⏰ ${formatTime(entry.timestamp)} - ${calculateEndTime(entry.timestamp, entry.duration)}</div>
                                         <div class="activity-label">${entry.activity}</div>
                                         <div style="font-size: 13px; color: #666; margin-top: 8px;">Duration: ${entry.duration} minutes</div>
                                         ${entry.optionalNote ? `
@@ -1435,10 +1412,10 @@ function renderTimeline() {
                                         ` : ''}` :
                                         `<div class="breadcrumb-time">
                                             ${entry.isQuickTrack ?
-                                                `<span class="compact-time">â° ${formatTime(entry.timestamp)} ${entry.note}</span>` :
-                                                `â° ${formatTime(entry.timestamp)}`
+                                                `<span class="compact-time">⏰ ${formatTime(entry.timestamp)} ${entry.note}</span>` :
+                                                `⏰ ${formatTime(entry.timestamp)}`
                                             }
-                                            ${entry.isSpent ? `<span class="spent-badge">ðŸ’° â‚¬${entry.spentAmount.toFixed(2)}</span>` : ''}
+                                            ${entry.isSpent ? `<span class="spent-badge">💰 €${entry.spentAmount.toFixed(2)}</span>` : ''}
                                         </div>`
                                     }
                                     
@@ -1461,8 +1438,8 @@ function renderTimeline() {
                                     ${entry.weather || entry.location ? `
                                         <div style="font-size: 12px; color: ${entry.isQuickTrack ? '#ccc' : '#666'}; margin-bottom: 8px;">
                                             ${entry.weather ? `${entry.weather}` : ''}
-                                            ${entry.weather && entry.location && entry.location.length < 20 ? ` â€¢ ðŸ“ ${entry.location}` : ''}
-                                            ${!entry.weather && entry.location ? `ðŸ“ ${entry.location}` : ''}
+                                            ${entry.weather && entry.location && entry.location.length < 20 ? ` • 📍 ${entry.location}` : ''}
+                                            ${!entry.weather && entry.location ? `📍 ${entry.location}` : ''}
                                         </div>
                                     ` : ''}
                                     
@@ -1480,7 +1457,7 @@ function renderTimeline() {
                                         `).join('') : ''}
                                         ${entry.coords ? `<div class="preview-map-thumb" id="mini-map-${entry.id}"></div>` : ''}
                                         ${(entry.images && entry.images.length > 0) || entry.coords || entry.audio ? `
-                                            <button class="mac-button preview-button" onclick="previewEntry(${entry.id})">ðŸ”</button>
+                                            <button class="mac-button preview-button" onclick="previewEntry(${entry.id})">🔍</button>
                                         ` : ''}
                                     </div>
                                 </div>
@@ -1542,7 +1519,7 @@ function openExportModal(format) {
         createExportModal();
     }
     
-    // Configurar el modal segÃºn el formato
+    // Configurar el modal según el formato
     document.getElementById('export-format-type').textContent = format === 'csv' ? 'CSV' : 'iCal';
     document.getElementById('export-modal').classList.add('show');
 }
@@ -1552,8 +1529,8 @@ function createExportModal() {
         <div id="export-modal" class="preview-modal" onclick="closeExportModal(event)">
             <div class="preview-content" onclick="event.stopPropagation()">
                 <div class="mac-title-bar">
-                    <span>ðŸ“¤ Export <span id="export-format-type">CSV</span></span>
-                    <button onclick="closeExportModal()" style="background: #fff; border: 2px solid #000; padding: 2px 8px; cursor: pointer;">âœ•</button>
+                    <span>📤 Export <span id="export-format-type">CSV</span></span>
+                    <button onclick="closeExportModal()" style="background: #fff; border: 2px solid #000; padding: 2px 8px; cursor: pointer;">✕</button>
                 </div>
                 <div class="mac-content">
                     <h3 style="margin-bottom: 16px;">Select Export Range</h3>
@@ -1604,7 +1581,7 @@ function createExportModal() {
                     </div>
                     
                     <button class="mac-button mac-button-primary" onclick="performExport()" style="width: 100%; margin-top: 24px;">
-                        ðŸ“¥ Export
+                        📥 Export
                     </button>
                 </div>
             </div>
@@ -1641,7 +1618,7 @@ function performExport() {
     const range = document.querySelector('input[name="export-range"]:checked').value;
     const icalGrouping = document.querySelector('input[name="ical-grouping"]:checked').value;
     
-    // Filtrar entradas segÃºn el rango seleccionado
+    // Filtrar entradas según el rango seleccionado
     let filteredEntries = [...entries];
     let filenameSuffix = 'all';
     
@@ -1669,7 +1646,7 @@ function performExport() {
         return;
     }
     
-    // Realizar la exportaciÃ³n
+    // Realizar la exportación
     if (format === 'csv') {
         exportCSVData(filteredEntries, filenameSuffix);
     } else {
@@ -1689,7 +1666,7 @@ function exportCSVData(data, suffix) {
         e.location || '',
         e.weather || '',
         e.mood ? `${e.mood.emoji} ${e.mood.label}` : '',
-        e.spentAmount ? `â‚¬${e.spentAmount}` : '',
+        e.spentAmount ? `€${e.spentAmount}` : '',
         e.images ? e.images.length : 0
     ]);
     
@@ -1710,7 +1687,7 @@ function exportICSData(data, suffix, grouping) {
     let icsEvents = '';
     
     if (grouping === 'daily') {
-        // Agrupar por dÃ­a
+        // Agrupar por día
         const groupedByDay = {};
         data.forEach(e => {
             const date = new Date(e.timestamp);
@@ -1721,14 +1698,14 @@ function exportICSData(data, suffix, grouping) {
             groupedByDay[dayKey].push(e);
         });
         
-        // Crear un evento por dÃ­a
+        // Crear un evento por día
         icsEvents = Object.keys(groupedByDay).map(dayKey => {
             const dayEntries = groupedByDay[dayKey];
             const firstEntry = dayEntries[0];
             const date = new Date(firstEntry.timestamp);
             const dateStr = date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
             
-            // Crear descripciÃ³n con todos los eventos del dÃ­a
+            // Crear descripción con todos los eventos del día
             const description = dayEntries.map(e => {
                 const time = new Date(e.timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
                 let text = `${time}: ${e.note || e.activity || 'Event'}`;
@@ -1816,7 +1793,7 @@ function calculateStats() {
     
     const totalHours = (totalMinutes / 60).toFixed(1);
     
-    // Actividades mÃ¡s frecuentes
+    // Actividades más frecuentes
     const activityCount = {};
     entries.filter(e => e.isTimedActivity).forEach(e => {
         activityCount[e.activity] = (activityCount[e.activity] || 0) + 1;
@@ -1825,7 +1802,7 @@ function calculateStats() {
         ? Object.keys(activityCount).reduce((a, b) => activityCount[a] > activityCount[b] ? a : b)
         : 'None';
     
-    // Tracks mÃ¡s frecuentes
+    // Tracks más frecuentes
     const trackCount = {};
     entries.filter(e => e.isQuickTrack).forEach(e => {
         trackCount[e.note] = (trackCount[e.note] || 0) + 1;
@@ -1841,22 +1818,22 @@ function calculateStats() {
         </div>
         <div class="stat-card">
             <div class="stat-number">${breadcrumbs}</div>
-            <div class="stat-label">ðŸž Breadcrumbs</div>
+            <div class="stat-label">📝 Breadcrumbs</div>
         </div>
         <div class="stat-card">
             <div class="stat-number">${timeEvents}</div>
-            <div class="stat-label">â±ï¸ Time Events</div>
+            <div class="stat-label">⏱️ Time Events</div>
         </div>
         <div class="stat-card">
             <div class="stat-number">${trackEvents}</div>
-            <div class="stat-label">ðŸ“Š Tracked Items</div>
+            <div class="stat-label">📊 Tracked Items</div>
         </div>
         <div class="stat-card">
             <div class="stat-number">${spentEvents}</div>
-            <div class="stat-label">ðŸ’° Expenses</div>
+            <div class="stat-label">💰 Expenses</div>
         </div>
         <div class="stat-card">
-            <div class="stat-number">â‚¬${totalSpent.toFixed(2)}</div>
+            <div class="stat-number">€${totalSpent.toFixed(2)}</div>
             <div class="stat-label">Total Spent</div>
         </div>
         <div class="stat-card">
@@ -1883,23 +1860,20 @@ function closeStats(event) {
         modal.classList.remove('show');
     }
 }
+// Initialize app
+loadData();
+loadSettings();
 
 // ===== RECAP FUNCTIONS =====
 
 function showRecapForm() {
     // Ocultar otros formularios
-    document.getElementById('form-window').classList.add('hidden');
-    document.getElementById('timer-window').classList.add('hidden');
-    document.getElementById('track-window').classList.add('hidden');
-    document.getElementById('spent-window').classList.add('hidden');
+    ['crumb-form', 'time-form', 'track-form', 'spent-form'].forEach(id => {
+        const form = document.getElementById(id);
+        if (form) form.classList.add('hidden');
+    });
     
     document.getElementById('recap-form').classList.remove('hidden');
-    
-    // Si no estamos editando, asegurar que el botón delete esté oculto
-    if (!editingEntryId) {
-        document.getElementById('save-recap-btn').textContent = '💾 Save Recap';
-        document.getElementById('delete-recap-btn').classList.add('hidden');
-    }
     
     // Listener para el slider
     const slider = document.getElementById('recap-rating');
@@ -1922,10 +1896,6 @@ function closeRecapForm() {
     document.getElementById('recap-bso').value = '';
     document.getElementById('recap-bso-results').innerHTML = '';
     document.getElementById('recap-selected-track').value = '';
-    // Restaurar botones
-    document.getElementById('save-recap-btn').textContent = '💾 Save Recap';
-    document.getElementById('delete-recap-btn').classList.add('hidden');
-    editingEntryId = null;
 }
 
 async function buscarBSO() {
@@ -1945,13 +1915,13 @@ async function buscarBSO() {
         
         if (data.results && data.results.length > 0) {
             const html = data.results.map(track => `
-                <div class="bso-result" style="display: flex; align-items: center; gap: 12px; padding: 8px; border: 2px solid #999; margin-bottom: 8px; cursor: pointer; background: white;" onclick="selectTrack('${track.trackName.replace(/'/g, "\\'")}', '${track.artistName.replace(/'/g, "\\'")}', '${track.trackViewUrl}', '${track.artworkUrl100}')">
+                <div class="bso-result" style="display: flex; align-items: center; gap: 12px; padding: 8px; border: 2px solid #999; margin-bottom: 8px; cursor: pointer; background: white;" onclick="selectTrack('${track.trackName.replace(/'/g, "\'")}', '${track.artistName.replace(/'/g, "\'")}', '${track.trackViewUrl}', '${track.artworkUrl100}')">
                     <img src="${track.artworkUrl100}" style="width: 50px; height: 50px; border: 2px solid #000;">
                     <div style="flex: 1;">
                         <div style="font-weight: bold; font-size: 13px;">${track.trackName}</div>
                         <div style="font-size: 11px; color: #666;">${track.artistName}</div>
                     </div>
-                    <div style="font-size: 18px;">â–¶ï¸</div>
+                    <div style="font-size: 18px;">▶️</div>
                 </div>
             `).join('');
             resultsDiv.innerHTML = html;
@@ -1980,7 +1950,7 @@ function selectTrack(trackName, artistName, url, artwork) {
                 <div style="font-weight: bold;">${trackName}</div>
                 <div style="font-size: 12px; color: #666;">${artistName}</div>
             </div>
-            <a href="${url}" target="_blank" style="text-decoration: none; font-size: 20px;">ðŸ”—</a>
+            <a href="${url}" target="_blank" style="text-decoration: none; font-size: 20px;">🔗</a>
         </div>
     `;
 }
@@ -1988,67 +1958,88 @@ function selectTrack(trackName, artistName, url, artwork) {
 function saveRecap() {
     const reflection = document.getElementById('recap-reflection').value.trim();
     const rating = document.getElementById('recap-rating').value;
-    const highlight1 = document.getElementById('recap-highlight-1').value.trim();
+}
+  const highlight1 = document.getElementById('recap-highlight-1').value.trim();
     const highlight2 = document.getElementById('recap-highlight-2').value.trim();
     const highlight3 = document.getElementById('recap-highlight-3').value.trim();
     const selectedTrackJson = document.getElementById('recap-selected-track').value;
     
     if (!reflection && !highlight1 && !highlight2 && !highlight3) {
-        alert('Please add at least a reflection or a highlight');
-        return;
-    }
+// ===== FAB MENU =====
+
+let fabMenuOpen = false;
+
+function toggleFabMenu() {
+    const fabActions = document.querySelectorAll('.fab-action');
+    const fabIcon = document.getElementById('fab-icon');
     
-    const highlights = [highlight1, highlight2, highlight3].filter(h => h);
-    const track = selectedTrackJson ? JSON.parse(selectedTrackJson) : null;
+    fabMenuOpen = !fabMenuOpen;
     
-    // Obtener fecha de hoy para el recap
-    const today = new Date();
-    today.setHours(23, 59, 59, 999); // Final del día
-    const todayKey = getDayKey(today.toISOString());
-    
-    if (editingEntryId) {
-        // Modo edición: actualizar recap existente
-        const entryIndex = entries.findIndex(e => e.id === editingEntryId);
-        if (entryIndex !== -1) {
-            entries[entryIndex] = {
-                ...entries[entryIndex],
-                reflection: reflection,
-                rating: parseInt(rating),
-                highlights: highlights,
-                track: track
-            };
-        }
-        editingEntryId = null;
-        alert('✅ Day Recap updated!');
+    if (fabMenuOpen) {
+        fabIcon.textContent = '×';
+        fabIcon.style.transform = 'rotate(45deg)';
+        
+        fabActions.forEach((btn, index) => {
+            setTimeout(() => {
+                btn.classList.remove('hidden');
+                setTimeout(() => btn.classList.add('show'), 10);
+            }, index * 50);
+        });
     } else {
-        // Modo creación: verificar que no exista ya un recap para hoy
-        const existingRecap = entries.find(e => 
-            e.type === 'recap' && getDayKey(e.timestamp) === todayKey
-        );
+        fabIcon.textContent = '+';
+        fabIcon.style.transform = 'rotate(0deg)';
         
-        if (existingRecap) {
-            alert('⚠️ A recap already exists for today. Please edit the existing one.');
-            return;
-        }
-        
-        const recap = {
-            id: Date.now(),
-            type: 'recap',
-            timestamp: today.toISOString(),
-            reflection: reflection,
-            rating: parseInt(rating),
-            highlights: highlights,
-            track: track
-        };
-        
-        entries.unshift(recap);
-        alert('✅ Day Recap saved!');
+        fabActions.forEach((btn, index) => {
+            setTimeout(() => {
+                btn.classList.remove('show');
+                setTimeout(() => btn.classList.add('hidden'), 300);
+            }, index * 30);
+        });
     }
-    
-    saveData();
-    renderTimeline();
-    closeRecapForm();
 }
+
+// Cerrar FAB menu al hacer click en una acción
+function closeFabMenu() {
+    if (fabMenuOpen) {
+        toggleFabMenu();
+    }
+}
+
+// Modificar las funciones toggle para cerrar el menú
+const originalToggleCrumb = window.toggleCrumb;
+window.toggleCrumb = function() {
+    closeFabMenu();
+    if (originalToggleCrumb) originalToggleCrumb();
+};
+
+const originalToggleTimer = window.toggleTimer;
+window.toggleTimer = function() {
+    closeFabMenu();
+    if (originalToggleTimer) originalToggleTimer();
+};
+
+const originalToggleTrack = window.toggleTrack;
+window.toggleTrack = function() {
+    closeFabMenu();
+    if (originalToggleTrack) originalToggleTrack();
+};
+
+const originalToggleSpent = window.toggleSpent;
+window.toggleSpent = function() {
+    closeFabMenu();
+    if (originalToggleSpent) originalToggleSpent();
+};
+
+// Agregar para Recap
+const originalShowRecapForm = window.showRecapForm;
+window.showRecapForm = function() {
+    closeFabMenu();
+    document.getElementById('recap-form').classList.remove('hidden');
+    ['crumb-form', 'time-form', 'track-form', 'spent-form'].forEach(id => {
+        document.getElementById(id)?.classList.add('hidden');
+    });
+};
+
 
 // Edit Recap Event
 function editRecapEvent(entry) {
@@ -2073,105 +2064,10 @@ function editRecapEvent(entry) {
                     <div style="font-weight: bold;">${entry.track.name}</div>
                     <div style="font-size: 12px; color: #666;">${entry.track.artist}</div>
                 </div>
-                <a href="${entry.track.url}" target="_blank" style="text-decoration: none; font-size: 20px;">ðŸ”—</a>
+                <a href="${entry.track.url}" target="_blank" style="text-decoration: none; font-size: 20px;">🔗</a>
             </div>`;
     }
     
-    
-    // Mostrar botón delete y cambiar texto de save
-    document.getElementById('save-recap-btn').textContent = '💾 Update Recap';
-    document.getElementById('delete-recap-btn').classList.remove('hidden');
-    
     showRecapForm();
 }
-
-// ===== FAB MENU =====
-
-let fabMenuOpen = false;
-
-function toggleFabMenu() {
-    const fabActions = document.querySelectorAll('.fab-action');
-    const fabIcon = document.getElementById('fab-icon');
-    
-    fabMenuOpen = !fabMenuOpen;
-    
-    if (fabMenuOpen) {
-        fabIcon.textContent = 'Ã—';
-        fabIcon.style.transform = 'rotate(45deg)';
-        
-        fabActions.forEach((btn, index) => {
-            setTimeout(() => {
-                btn.classList.remove('hidden');
-                setTimeout(() => btn.classList.add('show'), 10);
-            }, index * 50);
-        });
-    } else {
-        fabIcon.textContent = '+';
-        fabIcon.style.transform = 'rotate(0deg)';
-        
-        fabActions.forEach((btn, index) => {
-            setTimeout(() => {
-                btn.classList.remove('show');
-                setTimeout(() => btn.classList.add('hidden'), 300);
-            }, index * 30);
-        });
-    }
 }
-
-// Cerrar FAB menu al hacer click en una acciÃ³n
-function closeFabMenu() {
-    if (fabMenuOpen) {
-        toggleFabMenu();
-    }
-}
-
-// Toggle Crumb Form
-function toggleCrumb() {
-    closeFabMenu();
-    const formWindow = document.getElementById('form-window');
-    
-    if (formWindow.classList.contains('hidden')) {
-        // Limpiar formulario
-        editingEntryId = null;
-        document.getElementById('note-input').value = '';
-        document.getElementById('location-input').value = '';
-        document.getElementById('weather-input').value = '';
-        currentImages = [];
-        currentAudio = null;
-        currentCoords = null;
-        selectedMood = null;
-        
-        // Set current datetime
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        document.getElementById('datetime-input').value = `${year}-${month}-${day}T${hours}:${minutes}`;
-        
-        renderImagePreviews();
-        renderAudioPreview();
-        renderMoodSelector();
-        
-        document.getElementById('delete-btn').classList.add('hidden');
-        document.getElementById('save-btn').textContent = 'ðŸ’¾ Save';
-        
-        // Hide other forms
-        document.getElementById('timer-window').classList.add('hidden');
-        document.getElementById('track-window').classList.add('hidden');
-        document.getElementById('spent-window').classList.add('hidden');
-        document.getElementById('recap-form').classList.add('hidden');
-        
-        // Show this form
-        formWindow.classList.remove('hidden');
-        formWindow.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } else {
-        formWindow.classList.add('hidden');
-    }
-}
-
-// Initialize app
-loadData();
-loadSettings();
-updateTimerOptions();
