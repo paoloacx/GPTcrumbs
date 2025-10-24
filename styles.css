@@ -295,7 +295,7 @@ h1 {
     background: #333;
 }
 
-/* ANIMACIÓN PANEL DESPLEGABLE */
+/* ANIMACIÃ“N PANEL DESPLEGABLE */
 .day-content {
     max-height: 0;
     overflow: hidden;
@@ -323,7 +323,7 @@ h1 {
     padding: 16px !important;
 }
 
-/* ANIMACIÓN CHEVRON */
+/* ANIMACIÃ“N CHEVRON */
 .chevron {
     display: inline-block;
     transition: transform 0.3s ease;
@@ -467,7 +467,7 @@ h1 {
     font-size: 11px;
 }
 
-/* ANIMACIÓN MODAL (pop-in suave) */
+/* ANIMACIÃ“N MODAL (pop-in suave) */
 .preview-modal {
     display: none;
     position: fixed;
@@ -865,6 +865,10 @@ h1 {
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     transition: all 0.3s ease;
+    border: 2px solid #cc9900 !important;
+    border-radius: 4px !important;
+    line-height: 1.6 !important;
+    background: #fffacd !important;
 }
 
 .optional-note.expanded {
@@ -872,12 +876,6 @@ h1 {
     display: block;
     -webkit-line-clamp: unset;
     animation: slideDown 0.3s ease;
-}
-    border: 2px solid #cc9900 !important;
-    border-radius: 4px !important;
-    line-height: 1.6 !important;
-    background: #fffacd !important;
-    display: block !important;
 }
 
 .breadcrumb-entry.track-event .optional-note {
@@ -899,6 +897,32 @@ h1 {
 }
 
 /* ANIMACIONES PARA TODOS LOS MODALES Y FORMULARIOS */
+
+/* Formularios de creación (form, timer, track, spent, recap) */
+#form-window,
+#timer-window,
+#track-window,
+#spent-window,
+#recap-form {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition:
+        max-height 0.45s ease,
+        opacity 0.4s ease,
+        transform 0.4s ease;
+}
+
+#form-window:not(.hidden),
+#timer-window:not(.hidden),
+#track-window:not(.hidden),
+#spent-window:not(.hidden),
+#recap-form:not(.hidden) {
+    max-height: 3000px;
+    opacity: 1;
+    transform: translateY(0);
+}
 
 /* Stats panel */
 #stats-panel {
@@ -954,32 +978,8 @@ h1 {
     transform: translateY(0);
 }
 
-/* Formularios de creación (Crumb, Time, Track, Spent) */
-#crumb-form,
-#time-form,
-#track-form,
-#spent-form {
-    max-height: 0;
-    overflow: hidden;
-    opacity: 0;
-    transform: translateY(-6px);
-    transition:
-        max-height 0.45s ease,
-        opacity 0.4s ease,
-        transform 0.4s ease;
-}
 
-#crumb-form:not(.hidden),
-#time-form:not(.hidden),
-#track-form:not(.hidden),
-#spent-form:not(.hidden) {
-    max-height: 3000px;
-    opacity: 1;
-    transform: translateY(0);
-}
-
-
-/* Animación para mood selector */
+/* AnimaciÃ³n para mood selector */
 .mood-option {
     transition: all 0.2s cubic-bezier(.18,.89,.32,1.28);
 }
@@ -988,7 +988,7 @@ h1 {
     transform: scale(0.9);
 }
 
-/* Animación para activity/duration selectors */
+/* AnimaciÃ³n para activity/duration selectors */
 .duration-option,
 .activity-option {
     transition: all 0.2s cubic-bezier(.18,.89,.32,1.28);
@@ -999,7 +999,7 @@ h1 {
     transform: scale(0.95);
 }
 
-/* Animación para image preview */
+/* AnimaciÃ³n para image preview */
 .preview-image-thumb,
 .preview-map-thumb {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -1016,7 +1016,7 @@ h1 {
     transform: scale(0.98);
 }
 
-/* Animación para edit button */
+/* AnimaciÃ³n para edit button */
 .edit-button {
     transition: all 0.15s ease;
 }
@@ -1030,7 +1030,7 @@ h1 {
     transform: scale(0.95);
 }
 
-/* Animación para read more button */
+/* AnimaciÃ³n para read more button */
 .read-more-btn {
     transition: all 0.2s ease;
     padding: 4px 8px;
@@ -1064,8 +1064,81 @@ h1 {
 
 /* ===== RECAP STYLES ===== */
 
-.recap-entry {
-    box-shadow: 5px 5px 0 rgba(0,0,0,0.3) !important;
+.day-recap {
+    background: white;
+    background-image: 
+        repeating-linear-gradient(0deg, transparent, transparent 1px, #333 1px, #333 2px),
+        repeating-linear-gradient(90deg, transparent, transparent 1px, #333 1px, #333 2px);
+    background-size: 2px 2px;
+    box-shadow: 5px 5px 0 rgba(0,0,0,0.3);
+    margin: 0 0 16px 0;
+}
+
+.recap-header {
+    background: #f0f0f0;
+    color: #000;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+    transition: background 0.2s ease;
+    border-bottom: 2px solid #ccc;
+}
+
+.recap-header:hover {
+    background: #e8e8e8;
+}
+
+.recap-chevron {
+    font-size: 14px;
+    transition: transform 0.3s ease;
+    order: -1; /* Esto mueve el chevron al principio */
+}
+
+.recap-chevron.expanded {
+    transform: rotate(180deg);
+}
+
+.recap-content {
+    padding: 16px;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.recap-content.hidden {
+    display: none;
+}
+
+.recap-rating {
+    font-size: 20px;
+    margin-bottom: 12px;
+}
+
+.recap-section {
+    margin-bottom: 16px;
+    padding: 12px;
+    background: #fafafa;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+}
+
+.recap-section strong {
+    color: #000;
+    font-size: 14px;
+}
+
+.recap-section ul {
+    margin: 8px 0 0 20px;
+    padding: 0;
+}
+
+.recap-section li {
+    margin: 4px 0;
+    font-size: 13px;
 }
 
 /* Slider estilo Mac retro */
@@ -1144,13 +1217,13 @@ input[type="range"]:active::-moz-range-thumb {
 
 .fab-container {
     position: fixed;
-    bottom: 100px;
+    bottom: 80px;
     right: 20px;
     z-index: 9998;
     display: flex;
     flex-direction: column-reverse;
     gap: 12px;
-    align-items: flex-end;
+    align-items: center;
 }
 
 .fab {
@@ -1211,7 +1284,7 @@ input[type="range"]:active::-moz-range-thumb {
 @media (max-width: 768px) {
     .fab-container {
         right: 16px;
-        bottom: 90px;
+        bottom: 70px;
     }
     
     .fab-main {
@@ -1225,80 +1298,7 @@ input[type="range"]:active::-moz-range-thumb {
     }
 }
 
-
 #fab-icon {
     transition: transform 0.3s ease;
     display: inline-block;
 }
-
-
-/* ===== DAY RECAP STYLES ===== */
-
-.day-recap {
-    background: #f8f8f8;
-    border: 3px dashed #000;
-    box-shadow: 5px 5px 0 rgba(0,0,0,0.3);
-    margin: 0 0 16px 0;
-}
-
-.recap-header {
-    background: #f0f0f0;
-    color: #000;
-    padding: 12px 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 16px;
-    transition: background 0.2s ease;
-    border-bottom: 2px solid #ccc;
-}
-
-.recap-header:hover {
-    background: #e8e8e8;
-}
-
-.recap-chevron {
-    font-size: 14px;
-    transition: transform 0.3s ease;
-}
-
-.recap-content {
-    padding: 16px;
-    background: white;
-    transition: all 0.3s ease;
-}
-
-.recap-content.hidden {
-    display: none;
-}
-
-.recap-rating {
-    font-size: 20px;
-    margin-bottom: 12px;
-}
-
-.recap-section {
-    margin-bottom: 16px;
-    padding: 12px;
-    background: #fafafa;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-}
-
-.recap-section strong {
-    color: #000;
-    font-size: 14px;
-}
-
-.recap-section ul {
-    margin: 8px 0 0 20px;
-    padding: 0;
-}
-
-.recap-section li {
-    margin: 4px 0;
-    font-size: 13px;
-}
-
