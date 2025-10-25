@@ -1830,6 +1830,9 @@ function showRecapForm() {
     
     document.getElementById('recap-form').classList.remove('hidden');
     
+    // Establecer fecha actual
+    setCurrentDateTime('datetime-input-recap');
+    
     // Listener para el slider
     const slider = document.getElementById('recap-rating');
     const valueDisplay = document.getElementById('recap-rating-value');
@@ -1910,6 +1913,47 @@ function selectTrack(trackName, artistName, url, artwork) {
     `;
 }
 
+function editRecapEvent(entry) {
+    editingEntryId = entry.id;
+    
+    // Set datetime
+    const date = new Date(entry.timestamp);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    document.getElementById('datetime-input-recap').value = `${year}-${month}-${day}T${hours}:${minutes}`;
+    
+    document.getElementById('recap-reflection').value = entry.reflection || '';
+    document.getElementById('recap-rating').value = entry.rating || 5;
+    document.getElementById('recap-rating-value').textContent = entry.rating || 5;
+    
+    if (entry.highlights && entry.highlights.length > 0) {
+        document.getElementById('recap-highlight-1').value = entry.highlights[0] || '';
+        document.getElementById('recap-highlight-2').value = entry.highlights[1] || '';
+        document.getElementById('recap-highlight-3').value = entry.highlights[2] || '';
+    }
+    
+    if (entry.track) {
+        document.getElementById('recap-selected-track').value = JSON.stringify(entry.track);
+        document.getElementById('recap-bso-results').innerHTML = `
+            <div style="display: flex; align-items: center; gap: 12px; padding: 12px; border: 3px solid #000; background: #f0f0f0;">
+                <img src="${entry.track.artwork}" style="width: 60px; height: 60px; border: 2px solid #000;">
+                <div style="flex: 1;">
+                    <div style="font-weight: bold;">${entry.track.name}</div>
+                    <div style="font-size: 12px; color: #666;">${entry.track.artist}</div>
+                </div>
+                <a href="${entry.track.url}" target="_blank" style="text-decoration: none; font-size: 20px;">🔗</a>
+            </div>
+        `;
+    }
+    
+    const recapForm = document.getElementById('recap-form');
+    recapForm.classList.remove('hidden');
+    recapForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 function saveRecap() {
     const reflection = document.getElementById('recap-reflection').value.trim();
     const rating = document.getElementById('recap-rating').value;
@@ -1917,28 +1961,45 @@ function saveRecap() {
     const highlight2 = document.getElementById('recap-highlight-2').value.trim();
     const highlight3 = document.getElementById('recap-highlight-3').value.trim();
     const selectedTrackJson = document.getElementById('recap-selected-track').value;
+    const timestamp = getTimestampFromInput('datetime-input-recap');
     
     if (!reflection && !highlight1 && !highlight2 && !highlight3) {
         alert('Please add at least one reflection or highlight');
         return;
     }
     
-    const recap = {
-        id: Date.now(),
-        timestamp: new Date().toISOString(),
-        type: 'recap',
-        reflection: reflection,
-        rating: parseInt(rating),
-        highlights: [highlight1, highlight2, highlight3].filter(h => h),
-        track: selectedTrackJson ? JSON.parse(selectedTrackJson) : null
-    };
+    if (editingEntryId) {
+        const entryIndex = entries.findIndex(e => e.id === editingEntryId);
+        if (entryIndex !== -1) {
+            entries[entryIndex] = {
+                ...entries[entryIndex],
+                timestamp: timestamp,
+                reflection: reflection,
+                rating: parseInt(rating),
+                highlights: [highlight1, highlight2, highlight3].filter(h => h),
+                track: selectedTrackJson ? JSON.parse(selectedTrackJson) : null
+            };
+        }
+        editingEntryId = null;
+        alert('🌟 Recap updated!');
+    } else {
+        const recap = {
+            id: Date.now(),
+            timestamp: timestamp,
+            type: 'recap',
+            reflection: reflection,
+            rating: parseInt(rating),
+            highlights: [highlight1, highlight2, highlight3].filter(h => h),
+            track: selectedTrackJson ? JSON.parse(selectedTrackJson) : null
+        };
+        
+        entries.unshift(recap);
+        alert('🌟 Recap saved!');
+    }
     
-    entries.push(recap);
     saveData();
     renderTimeline();
     closeRecapForm();
-    
-    alert('🌟 Recap saved!');
 }
 
 // ===== FAB MENU =====
@@ -1946,7 +2007,7 @@ function saveRecap() {
 let fabMenuOpen = false;
 
 function toggleFabMenu() {
-    const fabActions = document.querySelectorAll('.fab-action');
+    const fabActions = document.querySelectorAll('.fab-action-wrapper');
     const fabIcon = document.getElementById('fab-icon');
     
     fabMenuOpen = !fabMenuOpen;
@@ -1955,20 +2016,20 @@ function toggleFabMenu() {
         fabIcon.textContent = '×';
         fabIcon.style.transform = 'rotate(45deg)';
         
-        fabActions.forEach((btn, index) => {
+        fabActions.forEach((wrapper, index) => {
             setTimeout(() => {
-                btn.classList.remove('hidden');
-                setTimeout(() => btn.classList.add('show'), 10);
+                wrapper.classList.remove('hidden');
+                setTimeout(() => wrapper.classList.add('show'), 10);
             }, index * 50);
         });
     } else {
         fabIcon.textContent = '+';
         fabIcon.style.transform = 'rotate(0deg)';
         
-        fabActions.forEach((btn, index) => {
+        fabActions.forEach((wrapper, index) => {
             setTimeout(() => {
-                btn.classList.remove('show');
-                setTimeout(() => btn.classList.add('hidden'), 300);
+                wrapper.classList.remove('show');
+                setTimeout(() => wrapper.classList.add('hidden'), 300);
             }, index * 30);
         });
     }
