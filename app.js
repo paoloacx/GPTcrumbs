@@ -1272,6 +1272,14 @@ function toggleDay(dayKey) {
     chevron.classList.toggle('expanded');
 }
 
+function toggleRecap(recapId) {
+    const content = document.getElementById(`recap-content-${recapId}`);
+    const chevron = document.getElementById(`chevron-recap-${recapId}`);
+    
+    content.classList.toggle('hidden');
+    chevron.classList.toggle('expanded');
+}
+
 
 // Show image in modal
 function showImageInModal(entryId, imageIndex) {
@@ -1341,14 +1349,65 @@ function renderTimeline() {
                 const dayEntries = groupedByDay[dayKey];
                 const firstEntry = dayEntries[0];
                 
+                // Separar recaps de otros eventos
+                const recaps = dayEntries.filter(e => e.type === 'recap');
+                const regularEntries = dayEntries.filter(e => e.type !== 'recap');
+                
                 return `
                     <div class="day-block">
                         <div class="day-header" onclick="toggleDay('${dayKey}')">
                             <span>${formatDate(firstEntry.timestamp)}</span>
                             <span class="chevron" id="chevron-${dayKey}">▼</span>
                         </div>
+                        
+                        ${recaps.map(recap => `
+                            <div class="recap-block">
+                                <div class="recap-header" onclick="toggleRecap('${recap.id}')">
+                                    <span>Day Recap</span>
+                                    <span class="chevron-recap" id="chevron-recap-${recap.id}">▼</span>
+                                </div>
+                                <div class="recap-content hidden" id="recap-content-${recap.id}">
+                                    <button class="mac-button edit-button" onclick="editEntry(${recap.id})" style="position: absolute; top: 12px; right: 12px;">✏️ Edit</button>
+                                    
+                                    <div style="margin-bottom: 16px;">
+                                        <strong>Rating:</strong> ${recap.rating}/10 ${'⭐'.repeat(Math.round(recap.rating / 2))}
+                                    </div>
+                                    
+                                    ${recap.reflection ? `
+                                        <div style="margin-bottom: 16px;">
+                                            <strong>Reflection:</strong>
+                                            <div style="margin-top: 8px; line-height: 1.6;">${recap.reflection}</div>
+                                        </div>
+                                    ` : ''}
+                                    
+                                    ${recap.highlights && recap.highlights.length > 0 ? `
+                                        <div style="margin-bottom: 16px;">
+                                            <strong>Highlights:</strong>
+                                            <ul style="margin-top: 8px; padding-left: 20px;">
+                                                ${recap.highlights.map(h => `<li style="margin-bottom: 4px;">${h}</li>`).join('')}
+                                            </ul>
+                                        </div>
+                                    ` : ''}
+                                    
+                                    ${recap.track ? `
+                                        <div style="margin-bottom: 16px;">
+                                            <strong>Day's Soundtrack:</strong>
+                                            <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px; padding: 12px; border: 2px solid #000; background: #f9f9f9;">
+                                                <img src="${recap.track.artwork}" style="width: 50px; height: 50px; border: 2px solid #000;">
+                                                <div style="flex: 1;">
+                                                    <div style="font-weight: bold; font-size: 13px;">${recap.track.name}</div>
+                                                    <div style="font-size: 11px; color: #666;">${recap.track.artist}</div>
+                                                </div>
+                                                <a href="${recap.track.url}" target="_blank" style="text-decoration: none; font-size: 18px;">🔗</a>
+                                            </div>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                        
                         <div class="day-content" id="day-content-${dayKey}">
-                            ${dayEntries.map(entry => {
+                            ${regularEntries.map(entry => {
                                 const heightStyle = entry.isTimedActivity && entry.duration ? `min-height: ${Math.min(150 + entry.duration * 0.5, 300)}px;` : '';
                                 const trackClass = entry.isQuickTrack ? 'track-event' : '';
                                 const spentClass = entry.isSpent ? 'spent-event' : '';
