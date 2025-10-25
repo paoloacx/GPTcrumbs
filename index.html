@@ -23,7 +23,7 @@
         <img class="header-image" src="./header.png" alt="Breadcrumbs Timeline Header">
     </div>
     
-    <div class="sync-status" id="sync-status">Ã¢â€”Â Offline</div>
+    <div class="sync-status" id="sync-status">● Offline</div>
 
     <div id="auth-container" class="auth-panel">
         <div style="text-align: center; margin-bottom: 20px;">
@@ -32,11 +32,11 @@
         </div>
         
         <button class="mac-button mac-button-primary" onclick="signInWithGoogle()" style="width: 100%; margin-bottom: 12px; font-size: 16px;">
-            Ã°Å¸â€Â Sign in with Google
+            🔐 Sign in with Google
         </button>
         
         <button class="mac-button" onclick="signInWithEmail()" style="width: 100%; margin-bottom: 12px; font-size: 14px;">
-            Ã°Å¸â€œÂ§ Sign in with Email
+            📧 Sign in with Email
         </button>
         
         <div style="text-align: center; margin-top: 16px; font-size: 11px; color: #666;">
@@ -53,38 +53,35 @@
     <!-- Recap Form -->
     <div id="recap-form" class="mac-window hidden">
         <div class="mac-title-bar">
-            <span>Ã°Å¸Å’Å¸ Day Recap</span>
-            <button onclick="closeRecapForm()" style="background: transparent; border: none; color: white; cursor: pointer; font-size: 18px;">Ã¢Å“â€¢</button>
+            <span>🌟 Day Recap</span>
+            <button onclick="closeRecapForm()" style="background: transparent; border: none; color: white; cursor: pointer; font-size: 18px;">✕</button>
         </div>
         <div class="mac-content">
-            <label class="mac-label">Date:</label>
-            <input type="datetime-local" class="mac-input" id="datetime-input-recap">
+            <label class="mac-label">Reflexión del día</label>
+            <textarea id="recap-reflection" class="mac-textarea" placeholder="¿Cómo fue tu día?"></textarea>
             
-            <label class="mac-label">Day Reflection</label>
-            <textarea id="recap-reflection" class="mac-textarea" placeholder="How was your day?"></textarea>
-            
-            <label class="mac-label">Day Rating (1-10)</label>
+            <label class="mac-label">Valoración del día (1-10)</label>
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
                 <input type="range" id="recap-rating" min="1" max="10" value="5" 
                     style="flex: 1; height: 8px; border: 2px inset #999; background: #ddd;">
                 <span id="recap-rating-value" style="font-size: 24px; font-weight: bold; min-width: 40px;">5</span>
             </div>
             
-            <label class="mac-label">3 Day Highlights</label>
-            <input type="text" id="recap-highlight-1" class="mac-input" placeholder="1. Best part of the day">
-            <input type="text" id="recap-highlight-2" class="mac-input" placeholder="2. Something you learned">
-            <input type="text" id="recap-highlight-3" class="mac-input" placeholder="3. Favorite moment">
+            <label class="mac-label">3 cosas destacadas del día</label>
+            <input type="text" id="recap-highlight-1" class="mac-input" placeholder="1. Lo mejor del día">
+            <input type="text" id="recap-highlight-2" class="mac-input" placeholder="2. Algo que aprendiste">
+            <input type="text" id="recap-highlight-3" class="mac-input" placeholder="3. Momento favorito">
             
-            <label class="mac-label">Day's Soundtrack</label>
+            <label class="mac-label">Banda Sonora del Día (BSO)</label>
             <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-                <input type="text" id="recap-bso" class="mac-input" placeholder="Search song..." style="margin-bottom: 0;">
-                <button class="mac-button mac-button-primary" onclick="buscarBSO()">Ã°Å¸â€Â Buscar</button>
+                <input type="text" id="recap-bso" class="mac-input" placeholder="Buscar canción..." style="margin-bottom: 0;">
+                <button class="mac-button mac-button-primary" onclick="buscarBSO()">🔍 Buscar</button>
             </div>
             <div id="recap-bso-results" style="max-height: 200px; overflow-y: auto;"></div>
             <input type="hidden" id="recap-selected-track">
             
             <div style="margin-top: 16px;">
-                <button class="mac-button mac-button-primary" onclick="saveRecap()">Ã°Å¸â€™Â¾ Save Recap</button>
+                <button class="mac-button mac-button-primary" onclick="saveRecap()">💾 Save Recap</button>
                 <button class="mac-button" onclick="closeRecapForm()">Cancel</button>
             </div>
         </div>
@@ -94,39 +91,39 @@
             <div class="mac-title-bar">
                 <div class="title-left">
                     <span>Breadcrumbs Timeline</span>
-                    <button class="sync-button" onclick="syncData()" title="Refresh & Sync">Ã°Å¸â€â€ž</button>
+                    <button class="sync-button" onclick="syncData()" title="Refresh & Sync">🔄</button>
                 </div>
                 <div class="user-avatar" id="user-avatar" onclick="toggleUserMenu(event)" style="display: none;">
-                    <span id="user-icon">Ã°Å¸â€˜Â¤</span>
+                    <span id="user-icon">👤</span>
                     <div class="logout-menu" id="logout-menu">
                         <div class="user-email-display" id="user-email-full"></div>
-                        <button onclick="signOutUser(); event.stopPropagation();">Ã°Å¸Å¡Âª Sign Out</button>
+                        <button onclick="signOutUser(); event.stopPropagation();">🚪 Sign Out</button>
                     </div>
                 </div>
             </div>
             <div class="mac-content">
-                <button class="mac-button mac-button-primary" onclick="toggleForm()">Ã¢Å¾â€¢ Crumb</button>
-                <button class="mac-button" onclick="toggleTimer()">Ã¢ÂÂ±Ã¯Â¸Â Time</button>
-                <button class="mac-button" onclick="toggleTrack()">Ã°Å¸â€œÅ  Track</button>
-                <button class="mac-button" onclick="toggleSpent()">Ã°Å¸â€™Â° Spent</button>
+                <button class="mac-button mac-button-primary" onclick="toggleForm()">➕ Crumb</button>
+                <button class="mac-button" onclick="toggleTimer()">⏱️ Time</button>
+                <button class="mac-button" onclick="toggleTrack()">📊 Track</button>
+                <button class="mac-button" onclick="toggleSpent()">💰 Spent</button>
             </div>
         </div>
 
         <div class="mac-window hidden" id="form-window">
             <div class="mac-title-bar">New Entry</div>
             <div class="mac-content">
-                <label class="mac-label">Ã°Å¸â€œâ€¦ Date & Time:</label>
+                <label class="mac-label">📅 Date & Time:</label>
                 <input type="datetime-local" class="mac-input" id="datetime-input">
 
                 <label class="mac-label">
-                    Ã°Å¸ËœÅ  Mood:
-                    <button class="mac-button mood-config-btn" onclick="toggleMoodConfig()">Ã¢Å¡â„¢Ã¯Â¸Â</button>
+                    😊 Mood:
+                    <button class="mac-button mood-config-btn" onclick="toggleMoodConfig()">⚙️</button>
                 </label>
                 
                 <div id="mood-config" class="config-panel hidden">
                     <div style="margin-bottom: 12px; font-weight: bold;">Configure moods:</div>
                     <div id="mood-config-list"></div>
-                    <button class="mac-button" onclick="saveMoodConfig()" style="margin-top: 8px;">Ã°Å¸â€™Â¾ Save Configuration</button>
+                    <button class="mac-button" onclick="saveMoodConfig()" style="margin-top: 8px;">💾 Save Configuration</button>
                 </div>
 
                 <div class="mood-selector" id="mood-selector"></div>
@@ -134,27 +131,27 @@
                 <label class="mac-label">Note:</label>
                 <textarea class="mac-textarea" id="note-input" placeholder="What's happening?"></textarea>
 
-                <label class="mac-label">Ã°Å¸â€œÂ Location:</label>
+                <label class="mac-label">📍 Location:</label>
                 <input type="text" class="mac-input" id="location-input" placeholder="Place">
-                <button class="mac-button" onclick="getGPS()" id="gps-btn">Ã°Å¸Å’Â Use GPS</button>
+                <button class="mac-button" onclick="getGPS()" id="gps-btn">🌍 Use GPS</button>
                 <div id="form-map" class="mini-map" style="display: none;"></div>
 
-                <label class="mac-label">Ã¢ËœÂÃ¯Â¸Â Weather:</label>
+                <label class="mac-label">☁️ Weather:</label>
                 <input type="text" class="mac-input" id="weather-input" placeholder="Sunny, cloudy...">
 
-                <label class="mac-label">Ã°Å¸â€“Â¼Ã¯Â¸Â Images:</label>
+                <label class="mac-label">🖼️ Images:</label>
                 <input type="file" accept="image/*" multiple onchange="handleImages(event)" style="margin-bottom: 12px;">
                 <div id="image-previews"></div>
 
-                <label class="mac-label">Ã°Å¸Å½Â¤ Audio:</label>
+                <label class="mac-label">🎤 Audio:</label>
                 <div class="audio-recorder">
-                    <button class="mac-button" onclick="startRecording()" id="record-btn">Ã°Å¸â€Â´ Record</button>
-                    <button class="mac-button" onclick="stopRecording()" id="stop-record-btn" disabled>Ã¢ÂÂ¹Ã¯Â¸Â Stop</button>
+                    <button class="mac-button" onclick="startRecording()" id="record-btn">🔴 Record</button>
+                    <button class="mac-button" onclick="stopRecording()" id="stop-record-btn" disabled>⏹️ Stop</button>
                     <div id="audio-preview" style="margin-top: 8px;"></div>
                 </div>
 
-                <button class="mac-button mac-button-primary" onclick="saveEntry()" id="save-btn">Ã°Å¸â€™Â¾ Save</button>
-                <button class="mac-button delete-button hidden" onclick="deleteCurrentEntry()" id="delete-btn">Ã°Å¸â€”â€˜Ã¯Â¸Â Delete</button>
+                <button class="mac-button mac-button-primary" onclick="saveEntry()" id="save-btn">💾 Save</button>
+                <button class="mac-button delete-button hidden" onclick="deleteCurrentEntry()" id="delete-btn">🗑️ Delete</button>
                 <button class="mac-button" onclick="cancelEdit()">Cancel</button>
             </div>
         </div>
@@ -162,7 +159,7 @@
         <div class="mac-window hidden" id="timer-window">
             <div class="mac-title-bar">Time Event</div>
             <div class="mac-content">
-                <label class="mac-label">Ã°Å¸â€œâ€¦ Date & Time:</label>
+                <label class="mac-label">📅 Date & Time:</label>
                 <input type="datetime-local" class="mac-input" id="datetime-input-time">
 
                 <label class="mac-label">Duration:</label>
@@ -175,25 +172,25 @@
                 <input type="text" class="mac-input" id="time-optional-note" placeholder="Add a short note (optional)">
 
                 <button class="mac-button mac-button-primary" onclick="createTimeEvent()" id="create-time-btn" disabled style="width: 100%; margin-top: 16px;">Create Event</button>
-                <button class="mac-button delete-button hidden" onclick="deleteCurrentEntry()" id="delete-time-btn" style="width: 100%; margin-top: 8px;">Ã°Å¸â€”â€˜Ã¯Â¸Â Delete</button>
+                <button class="mac-button delete-button hidden" onclick="deleteCurrentEntry()" id="delete-time-btn" style="width: 100%; margin-top: 8px;">🗑️ Delete</button>
                 <button class="mac-button" onclick="toggleTimer()" style="width: 100%; margin-top: 8px;">Cancel</button>
             </div>
         </div>
 
         <div class="mac-window hidden" id="track-window">
-            <div class="mac-title-bar">Quick Mark</div>
+            <div class="mac-title-bar">Quick Track</div>
             <div class="mac-content">
-                <label class="mac-label">Ã°Å¸â€œâ€¦ Date & Time:</label>
+                <label class="mac-label">📅 Date & Time:</label>
                 <input type="datetime-local" class="mac-input" id="datetime-input-track">
 
-                <label class="mac-label">Select Mark Type:</label>
+                <label class="mac-label">Select Track Type:</label>
                 <div class="activity-selector" id="track-selector"></div>
 
                 <label class="mac-label">Optional Note:</label>
                 <input type="text" class="mac-input" id="track-optional-note" placeholder="Add a short note (optional)">
 
-                <button class="mac-button mac-button-primary" onclick="saveTrackEvent()" id="save-track-btn" disabled style="width: 100%; margin-top: 16px;">Save Mark</button>
-                <button class="mac-button delete-button hidden" onclick="deleteCurrentEntry()" id="delete-track-btn" style="width: 100%; margin-top: 8px;">Ã°Å¸â€”â€˜Ã¯Â¸Â Delete</button>
+                <button class="mac-button mac-button-primary" onclick="saveTrackEvent()" id="save-track-btn" disabled style="width: 100%; margin-top: 16px;">Save Track</button>
+                <button class="mac-button delete-button hidden" onclick="deleteCurrentEntry()" id="delete-track-btn" style="width: 100%; margin-top: 8px;">🗑️ Delete</button>
                 <button class="mac-button" onclick="toggleTrack()" style="width: 100%; margin-top: 8px;">Cancel</button>
             </div>
         </div>
@@ -201,7 +198,7 @@
         <div class="mac-window hidden" id="spent-window">
             <div class="mac-title-bar">Spent</div>
             <div class="mac-content">
-                <label class="mac-label">Ã°Å¸â€œâ€¦ Date & Time:</label>
+                <label class="mac-label">📅 Date & Time:</label>
                 <input type="datetime-local" class="mac-input" id="datetime-input-spent">
 
                 <label class="mac-label">Description:</label>
@@ -210,11 +207,11 @@
                 <label class="mac-label">Amount:</label>
                 <div class="spent-input">
                     <input type="number" class="mac-input" id="spent-amount" placeholder="0.00" step="0.01" style="margin: 0;">
-                    <span style="font-weight: bold;">Ã¢â€šÂ¬</span>
+                    <span style="font-weight: bold;">€</span>
                 </div>
 
-                <button class="mac-button mac-button-primary" onclick="saveSpent()" style="width: 100%;">Ã°Å¸â€™Â¾ Save</button>
-                <button class="mac-button delete-button hidden" onclick="deleteCurrentEntry()" id="delete-spent-btn" style="width: 100%; margin-top: 8px;">Ã°Å¸â€”â€˜Ã¯Â¸Â Delete</button>
+                <button class="mac-button mac-button-primary" onclick="saveSpent()" style="width: 100%;">💾 Save</button>
+                <button class="mac-button delete-button hidden" onclick="deleteCurrentEntry()" id="delete-spent-btn" style="width: 100%; margin-top: 8px;">🗑️ Delete</button>
                 <button class="mac-button" onclick="toggleSpent()" style="width: 100%; margin-top: 8px;">Cancel</button>
             </div>
         </div>
@@ -223,7 +220,7 @@
 
         <div class="mac-window hidden" id="empty-state">
             <div class="mac-content empty-state">
-                <div style="font-size: 48px; margin-bottom: 16px;">Ã°Å¸â€œÂ</div>
+                <div style="font-size: 48px; margin-bottom: 16px;">📍</div>
                 <p><strong>No entries yet</strong></p>
                 <p style="color: #666; margin-top: 8px;">Create your first breadcrumb</p>
             </div>
@@ -234,7 +231,7 @@
         <div class="preview-content" onclick="event.stopPropagation()">
             <div class="mac-title-bar">
                 <span>Preview</span>
-                <button onclick="closePreview()" style="background: #fff; border: 2px solid #000; padding: 2px 8px; cursor: pointer;">Ã¢Å“â€¢</button>
+                <button onclick="closePreview()" style="background: #fff; border: 2px solid #000; padding: 2px 8px; cursor: pointer;">✕</button>
             </div>
             <div class="mac-content" id="preview-body"></div>
         </div>
@@ -244,7 +241,7 @@
         <div class="preview-content" onclick="event.stopPropagation()">
             <div class="mac-title-bar">
                 <span>Settings</span>
-                <button onclick="closeSettings()" style="background: #fff; border: 2px solid #000; padding: 2px 8px; cursor: pointer;">Ã¢Å“â€¢</button>
+                <button onclick="closeSettings()" style="background: #fff; border: 2px solid #000; padding: 2px 8px; cursor: pointer;">✕</button>
             </div>
             <div class="mac-content">
                 <h3 style="margin-bottom: 16px;">Time Durations</h3>
@@ -256,7 +253,7 @@
                 <h3 style="margin-top: 24px; margin-bottom: 16px;">Track Items</h3>
                 <div id="track-items-config"></div>
                 
-                <button class="mac-button mac-button-primary" onclick="saveSettings()" style="width: 100%; margin-top: 24px;">Ã°Å¸â€™Â¾ Save Settings</button>
+                <button class="mac-button mac-button-primary" onclick="saveSettings()" style="width: 100%; margin-top: 24px;">💾 Save Settings</button>
             </div>
         </div>
     </div>
@@ -264,8 +261,8 @@
     <div id="stats-modal" class="preview-modal" onclick="closeStats(event)">
         <div class="preview-content" onclick="event.stopPropagation()">
             <div class="mac-title-bar">
-                <span>Ã°Å¸â€œÅ  Statistics</span>
-                <button onclick="closeStats()" style="background: #fff; border: 2px solid #000; padding: 2px 8px; cursor: pointer;">Ã¢Å“â€¢</button>
+                <span>📊 Statistics</span>
+                <button onclick="closeStats()" style="background: #fff; border: 2px solid #000; padding: 2px 8px; cursor: pointer;">✕</button>
             </div>
             <div class="mac-content">
                 <div class="stats-grid" id="stats-content"></div>
@@ -277,44 +274,28 @@
         <button class="fab fab-main" onclick="toggleFabMenu()" id="fab-main">
             <span id="fab-icon">+</span>
         </button>
-        <div class="fab-action-wrapper" id="fab-wrapper-0">
-            <span class="fab-label">Crumb</span>
-            <button class="fab fab-action" onclick="toggleForm();">
-                &#128205;
-            </button>
-        </div>
-        <div class="fab-action-wrapper" id="fab-wrapper-1">
-            <span class="fab-label">Time</span>
-            <button class="fab fab-action" onclick="toggleTimer();">
-                &#9201;
-            </button>
-        </div>
-        <div class="fab-action-wrapper" id="fab-wrapper-2">
-            <span class="fab-label">Mark</span>
-            <button class="fab fab-action" onclick="toggleTrack();">
-                &#127925;
-            </button>
-        </div>
-        <div class="fab-action-wrapper" id="fab-wrapper-3">
-            <span class="fab-label">Spent</span>
-            <button class="fab fab-action" onclick="toggleSpent();">
-                &#128176;
-            </button>
-        </div>
-        <div class="fab-action-wrapper" id="fab-wrapper-4">
-            <span class="fab-label">Recap</span>
-            <button class="fab fab-action" onclick="showRecapForm();">
-                &#11088;
-            </button>
-        </div>
+        <button class="fab fab-action hidden" onclick="toggleCrumb()" title="Breadcrumb">
+            📍
+        </button>
+        <button class="fab fab-action hidden" onclick="toggleTime()" title="Time Event">
+            ⏰
+        </button>
+        <button class="fab fab-action hidden" onclick="toggleTrack()" title="Quick Track">
+            🎵
+        </button>
+        <button class="fab fab-action hidden" onclick="toggleSpent()" title="Spent">
+            💰
+        </button>
+        <button class="fab fab-action hidden" onclick="showRecapForm()" title="Day Recap">
+            🌟
+        </button>
     </div>
 
-
     <div class="footer" id="footer" style="display: none;">
-        <button class="mac-button" onclick="openStats()">Ã°Å¸â€œÅ  Stats</button>
-        <button class="mac-button" onclick="exportCSV()">Ã°Å¸â€™Â¾ CSV</button>
-        <button class="mac-button" onclick="exportICS()">Ã°Å¸â€œâ€¦ iCal</button>
-        <button class="mac-button" onclick="openSettings()">Ã¢Å¡â„¢Ã¯Â¸Â Settings</button>
+        <button class="mac-button" onclick="openStats()">📊 Stats</button>
+        <button class="mac-button" onclick="exportCSV()">💾 CSV</button>
+        <button class="mac-button" onclick="exportICS()">📅 iCal</button>
+        <button class="mac-button" onclick="openSettings()">⚙️ Settings</button>
     </div>
 
     <script src="./firebase-config.js"></script>
